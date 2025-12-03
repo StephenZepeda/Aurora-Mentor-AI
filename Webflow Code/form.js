@@ -3,9 +3,6 @@
    ======================================== */
 
 const FormController = (() => {
-  const CACHE_KEY = 'ai_advisor_response_cache';
-  const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
   const FIELD_ID_MAP = {
     // My Stats
     gpa: "gpa",
@@ -204,74 +201,5 @@ const FormController = (() => {
     return null;
   }
 
-  // Simple hash function for generating checksum
-  function hashPayload(payload) {
-    const str = JSON.stringify(payload, Object.keys(payload).sort());
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString(36);
-  }
-
-  // Cache management
-  function getCachedResponse(payload) {
-    try {
-      const cacheStr = localStorage.getItem(CACHE_KEY);
-      if (!cacheStr) return null;
-      
-      const cache = JSON.parse(cacheStr);
-      const checksum = hashPayload(payload);
-      const entry = cache[checksum];
-      
-      if (!entry) return null;
-      
-      // Check if cache is expired
-      const age = Date.now() - entry.timestamp;
-      if (age > CACHE_MAX_AGE_MS) {
-        delete cache[checksum];
-        localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-        return null;
-      }
-      
-      return entry.data;
-    } catch {
-      return null;
-    }
-  }
-
-  function setCachedResponse(payload, responseData) {
-    try {
-      const cacheStr = localStorage.getItem(CACHE_KEY);
-      const cache = cacheStr ? JSON.parse(cacheStr) : {};
-      const checksum = hashPayload(payload);
-      
-      cache[checksum] = {
-        timestamp: Date.now(),
-        data: responseData
-      };
-      
-      // Limit cache size to 50 entries
-      const keys = Object.keys(cache);
-      if (keys.length > 50) {
-        // Remove oldest entries
-        const sorted = keys.sort((a, b) => cache[a].timestamp - cache[b].timestamp);
-        sorted.slice(0, keys.length - 50).forEach(k => delete cache[k]);
-      }
-      
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-    } catch (e) {
-      console.warn('Failed to cache response:', e);
-    }
-  }
-
-  function clearCache() {
-    try {
-      localStorage.removeItem(CACHE_KEY);
-    } catch { }
-  }
-
-  return { buildPayload, saveDraft, loadDraft, csvToList, findFieldId, getCachedResponse, setCachedResponse, clearCache, hashPayload };
+  return { buildPayload, saveDraft, loadDraft, csvToList, findFieldId };
 })();

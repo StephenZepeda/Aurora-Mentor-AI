@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -144,7 +147,19 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbgPrintf("(ID)[%s] Building prompt\n", id)
+	// Check cache before processing
+	checksum := checksumPayload(req)
+	dbgPrintf("(ID)[%s] Checksum: %s\n", id, checksum)
+	if cachedResp, found := getCachedResponse(checksum); found {
+		dbgPrintf("(ID)[%s] Cache hit! Returning cached response\n", id)
+		// Return cached response immediately, skip AI processing
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": cachedResp,
+		})
+		return
+	}
+
+	dbgPrintf("(ID)[%s] Cache miss, building prompt\n", id)
 	prompt := buildPrompt(req)
 
 	count, _, avg := getLatencySnapshot(AdvisorLatency)
@@ -155,10 +170,10 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 		"samples":        count, // int64
 	})
 
-	go Aidvisor_ChatGpt(prompt, id)
+	go Aidvisor_ChatGpt(prompt, id, checksum)
 }
 
-func Aidvisor_ChatGpt(prompt string, id string) {
+func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 	dbgPrintf("(ID)[%s] Advisor req processing ai\n", id)
 	savePrompt(id, "Processing")
 
@@ -213,6 +228,10 @@ func Aidvisor_ChatGpt(prompt string, id string) {
 
 	dbgPrintf("Aidvisor Chat GPT Prompt complete (%.3f seconds)[%s]\n", elapsed.Seconds(), id)
 	savePrompt(id, out)
+
+	// Save to cache
+	saveCachedResponse(checksum, out)
+	dbgPrintf("(ID)[%s] Response cached with checksum: %s\n", id, checksum)
 }
 
 // =====================================================
@@ -442,4 +461,61 @@ Rules:
 		"I want you to act as a college admissions advisor.\n\n%s\n\n%s",
 		profile, jsonContract,
 	)
+}
+
+// =====================================================
+//                 Checksum calculation
+// =====================================================
+
+func checksumPayload(req AdvisorRequest) string {
+	// Create a deterministic JSON representation by sorting keys
+	data, err := json.Marshal(req)
+	if err != nil {
+		return ""
+	}
+
+	// Parse and re-marshal with sorted keys
+	var obj map[string]interface{}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return ""
+	}
+
+	sortedJSON := marshalSorted(obj)
+
+	// Calculate SHA-256 hash
+	hash := sha256.Sum256([]byte(sortedJSON))
+	return hex.EncodeToString(hash[:])
+}
+
+func marshalSorted(obj interface{}) string {
+	switch v := obj.(type) {
+	case map[string]interface{}:
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		parts := make([]string, 0, len(keys))
+		for _, k := range keys {
+			parts = append(parts, fmt.Sprintf("%q:%s", k, marshalSorted(v[k])))
+		}
+		return "{" + strings.Join(parts, ",") + "}"
+
+	case []interface{}:
+		parts := make([]string, len(v))
+		for i, item := range v {
+			parts[i] = marshalSorted(item)
+		}
+		return "[" + strings.Join(parts, ",") + "]"
+
+	case string:
+		return fmt.Sprintf("%q", v)
+
+	case nil:
+		return "null"
+
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }

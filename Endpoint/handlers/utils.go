@@ -27,6 +27,55 @@ func dbgPrintf(format string, args ...any) {
 	}
 }
 
+// ---- Response cache with checksum ----
+
+type cachedResponse struct {
+	Timestamp int64  `json:"timestamp"`
+	Response  string `json:"response"`
+}
+
+const cacheTTL = 7 * 24 * time.Hour // 7 days
+const cacheDir = "data/response_cache"
+
+func getCachedResponse(checksum string) (string, bool) {
+	path := filepath.Join(cacheDir, checksum+".json")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return "", false
+	}
+
+	var cached cachedResponse
+	if err := json.Unmarshal(b, &cached); err != nil {
+		return "", false
+	}
+
+	// Check if cache is expired
+	age := time.Since(time.Unix(cached.Timestamp, 0))
+	if age > cacheTTL {
+		_ = os.Remove(path)
+		return "", false
+	}
+
+	return cached.Response, true
+}
+
+func saveCachedResponse(checksum string, response string) {
+	_ = os.MkdirAll(cacheDir, 0o755)
+
+	cached := cachedResponse{
+		Timestamp: time.Now().Unix(),
+		Response:  response,
+	}
+
+	data, err := json.MarshalIndent(cached, "", "  ")
+	if err != nil {
+		return
+	}
+
+	path := filepath.Join(cacheDir, checksum+".json")
+	_ = os.WriteFile(path, data, 0o644)
+}
+
 func escapeJSON(s string) string {
 	b, _ := json.Marshal(s) // quotes + escapes
 	return string(b[1 : len(b)-1])
