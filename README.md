@@ -68,6 +68,17 @@ See **[GITHUB_SETUP.md](GITHUB_SETUP.md)** for complete instructions on:
 - Setting up GitHub Pages or jsDelivr CDN
 - Integrating with Webflow
 
+### 3. Frontend Setup (CSS via CDN)
+
+If you prefer not to paste CSS into Webflow, you can load the stylesheet directly from the CDN:
+
+```html
+<!-- AidVisor CSS via jsDelivr CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.css">
+```
+
+Place this in Webflow Project Settings → Custom Code → Head Code. Replace `YOUR_USERNAME` and ensure your repo name matches.
+
 ## Frontend Setup (Webflow)
 
 After setting up GitHub (see [GITHUB_SETUP.md](GITHUB_SETUP.md)), integrate with Webflow:

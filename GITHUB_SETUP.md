@@ -39,7 +39,7 @@ GitHub will show you commands. Use these (replace with your actual values):
 
 ```powershell
 # Add GitHub as remote
-git remote add origin https://github.com/StephenZepeda/Aurora-Mentor-AI.git
+git remote add origin https://github.com/YOUR_USERNAME/aidvisor.git
 
 # Push your code
 git branch -M main
@@ -95,6 +95,8 @@ After pushing to GitHub, add this to Webflow **Project Settings → Custom Code 
 <script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/ui.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/details.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor_main.js"></script>
+<!-- AidVisor CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.css">
 ```
 
 Replace `YOUR_USERNAME` with your GitHub username.
@@ -116,6 +118,8 @@ Then use these script tags in Webflow:
 <script src="https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/ui.js"></script>
 <script src="https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/details.js"></script>
 <script src="https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor_main.js"></script>
+<!-- AidVisor CSS -->
+<link rel="stylesheet" href="https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor.css">
 ```
 
 ## Updating Code After Changes
@@ -144,6 +148,7 @@ git push --tags
 Then update your Webflow scripts to use the specific version:
 ```html
 <script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@v1.0.1/Webflow%20Code/wizard.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@v1.0.1/Webflow%20Code/Aidvisor.css">
 ```
 
 ## Troubleshooting
