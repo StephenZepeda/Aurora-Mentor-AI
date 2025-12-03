@@ -105,7 +105,7 @@ func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	dbgPrintf("Details req found\n")
+	dbgPrintf("Details request received\n")
 
 	var req SchoolDetailsRequest
 	dec := json.NewDecoder(io.LimitReader(r.Body, 1<<20))
@@ -126,13 +126,13 @@ func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 	// Try cache first
 	cachePath := cachePathForSchool(school)
 	if cached, ok, err := readFreshCache(cachePath); err == nil && ok {
-		dbgPrintf("Serving (%q) from cache: %s\n", school, cachePath)
+		dbgPrintf("(School)[%s] Cache hit: %s\n", school, cachePath)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(cached)
 		return
 	} else if err != nil {
-		dbgPrintf("Cache read error for %s: %v\n", cachePath, err)
+		dbgPrintf("(School)[%s] Cache read error: %v\n", school, err)
 	}
 
 	// No fresh cache -> async path
@@ -169,6 +169,7 @@ func SchoolDetails_ChatGpt(req SchoolDetailsRequest, school string, cachePath st
 
 	key, kerr := getAPIKey()
 	if kerr != nil {
+		dbgPrintf("(ID)[%s] Error getting API key: %v\n", id, kerr)
 		savePrompt(id, `{"error":"`+escapeJSON(kerr.Error())+`"}`)
 		return
 	}
@@ -255,10 +256,10 @@ Guidelines:
 
 	// Cache the valid JSON (best-effort)
 	if err := writeCache(cachePath, []byte(out)); err != nil {
-		dbgPrintf("Cache write error for %s: %v\n", cachePath, err)
+		dbgPrintf("(School)[%s] Cache write error: %v\n", school, err)
 	}
 
-	dbgPrintf("College (%s) Details Chat GPT Prompt complete (%.3f seconds)[%s]\n", school, elapsed.Seconds(), id)
+	dbgPrintf("(ID)[%s] (School)[%s] ChatGPT processing complete (%.3fs)\n", id, school, elapsed.Seconds())
 	savePrompt(id, out)
 }
 

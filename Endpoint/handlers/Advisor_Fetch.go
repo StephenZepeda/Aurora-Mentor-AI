@@ -35,11 +35,11 @@ func Advisor_Fetch(w http.ResponseWriter, r *http.Request) {
 				"success": val,
 			})
 			if strings.Contains(val, "schools") {
-				dbgPrintf("Advisor Prompt[%s] has been fetched, deleting\n", body.ID)
+				dbgPrintf("(ID)[%s] Result fetched, deleting from store\n", body.ID)
 				deletePrompt(body.ID)
 				return
 			}
-			dbgPrintf("Advisor Debug for id=%s:%+v\n", body.ID, val)
+			dbgPrintf("(ID)[%s] Processing status: %+v\n", body.ID, val)
 			return
 		}
 	}

@@ -174,7 +174,7 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 }
 
 func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
-	dbgPrintf("(ID)[%s] Advisor req processing ai\n", id)
+	dbgPrintf("(ID)[%s] Starting ChatGPT processing\n", id)
 	savePrompt(id, "Processing")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
@@ -201,7 +201,7 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 	go func() {
 		time.Sleep(time.Minute * 10)
 		if _, check := getPrompt(id); check {
-			dbgPrintf("Aidvisor deleting ID[%s] if it has not been already\n", id)
+			dbgPrintf("(ID)[%s] Auto-cleanup: deleting uncollected result\n", id)
 			deletePrompt(id)
 		}
 	}()
@@ -211,7 +211,7 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 	AdvisorLatency.record(elapsed)
 
 	if err != nil {
-		println(err.Error())
+		dbgPrintf("(ID)[%s] OpenAI API error: %v\n", id, err)
 		savePrompt(id, `{"error":"`+escapeJSON(err.Error())+`"}`)
 		return
 	}
@@ -226,7 +226,7 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 		return
 	}
 
-	dbgPrintf("Aidvisor Chat GPT Prompt complete (%.3f seconds)[%s]\n", elapsed.Seconds(), id)
+	dbgPrintf("(ID)[%s] ChatGPT processing complete (%.3fs)\n", id, elapsed.Seconds())
 	savePrompt(id, out)
 
 	// Save to cache

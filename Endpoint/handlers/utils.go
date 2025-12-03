@@ -34,7 +34,6 @@ type cachedResponse struct {
 	Response  string `json:"response"`
 }
 
-const cacheTTL = 7 * 24 * time.Hour // 7 days
 const cacheDir = "data/response_cache"
 
 func getCachedResponse(checksum string) (string, bool) {
