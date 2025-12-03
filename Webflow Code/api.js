@@ -124,6 +124,13 @@ const APIController = (() => {
     hasFinalResult = false;
     currentJobId = null;
 
+    // Check cache first
+    const cached = FormController.getCachedResponse(payload);
+    if (cached) {
+      console.log('Using cached response');
+      return onSchools(cached);
+    }
+
     try {
       const res = await fetch(HOOK_URL, {
         method: "POST",
@@ -133,12 +140,22 @@ const APIController = (() => {
       const data = await res.json().catch(() => null);
 
       const direct = extractSchoolsFromAny(data);
-      if (direct?.type === 'schools') return onSchools(direct.value);
+      if (direct?.type === 'schools') {
+        FormController.setCachedResponse(payload, direct.value);
+        return onSchools(direct.value);
+      }
       if (direct?.type === 'invalid') return onError("Invalid fields: " + JSON.stringify(direct.value));
 
       const id = ["id", "job_id", "request_id"].map(k => data?.[k]).find(Boolean);
       if (id) {
-        return startPolling(id, data?.avg_chatgpt_ms, data?.samples, onSchools, onError, onProgress);
+        return startPolling(id, data?.avg_chatgpt_ms, data?.samples, 
+          (schools) => {
+            FormController.setCachedResponse(payload, schools);
+            onSchools(schools);
+          }, 
+          onError, 
+          onProgress
+        );
       }
 
       if (res.ok) {
