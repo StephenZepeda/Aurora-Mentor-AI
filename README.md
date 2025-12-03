@@ -98,13 +98,16 @@ Then add this script in Webflow **Footer Code** (after your other scripts):
       const el = document.getElementById(mountId);
       if (!el) { console.error('Missing mount element #' + mountId); return; }
 
-      // Choose one source:
-      const url = 'https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.html';
+      const url = 'https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/Aidvisor.html';
       // const url = 'https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor.html'; // GitHub Pages alternative
 
       fetch(url, { cache: 'no-cache' })
-         .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-         .then(html => { el.innerHTML = html; })
+            .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+            .then(html => {
+               el.innerHTML = html;
+               // After injecting markup, initialize components
+               if (window.AidVisorInit) window.AidVisorInit();
+            })
          .catch(err => { console.error('Failed to load Aidvisor.html:', err); });
    })();
 </script>

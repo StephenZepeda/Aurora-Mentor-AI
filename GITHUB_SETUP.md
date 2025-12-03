@@ -107,7 +107,11 @@ After pushing to GitHub, add this to Webflow **Project Settings → Custom Code 
       const url = 'https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.html';
       fetch(url, { cache: 'no-cache' })
          .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-         .then(html => { el.innerHTML = html; })
+         .then(html => {
+            el.innerHTML = html;
+            // Initialize components after injection
+            if (window.AidVisorInit) window.AidVisorInit();
+         })
          .catch(err => { console.error('Failed to load Aidvisor.html:', err); });
    })();
 </script>
@@ -144,7 +148,10 @@ Then use these script tags in Webflow:
       const url = 'https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor.html';
       fetch(url, { cache: 'no-cache' })
          .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-         .then(html => { el.innerHTML = html; })
+         .then(html => {
+            el.innerHTML = html;
+            if (window.AidVisorInit) window.AidVisorInit();
+         })
          .catch(err => { console.error('Failed to load Aidvisor.html:', err); });
    })();
 </script>

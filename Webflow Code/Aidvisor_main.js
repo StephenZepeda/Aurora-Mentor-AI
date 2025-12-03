@@ -242,25 +242,32 @@ function initRefineUI() {
   if (refine) refine.style.display = "none";
 }
 
-// Main initialization
-(function init() {
-  // Initialize all modules
-  WizardController.init();
-  FormController.loadDraft();
-  DetailsController.init();
+// Expose a re-initialization hook for dynamically injected HTML
+window.AidVisorInit = function AidVisorInit() {
+  try {
+    // Initialize all modules
+    if (typeof WizardController?.init === 'function') WizardController.init();
+    if (typeof FormController?.loadDraft === 'function') FormController.loadDraft();
+    if (typeof DetailsController?.init === 'function') DetailsController.init();
 
-  // Initialize UI components
-  initOutcomesField();
-  initCustomSelects();
-  initDraftButton();
-  initFormSubmit();
-  initRefineButton();
-  initRefineUI();
+    // Initialize UI components
+    initOutcomesField();
+    initCustomSelects();
+    initDraftButton();
+    initFormSubmit();
+    initRefineButton();
+    initRefineUI();
 
-  // Hide results on initial load
-  const el = id => document.getElementById(id);
-  el("ai-errors")?.classList.add("ai-hidden");
-  el("ai-schools")?.classList.add("ai-hidden");
-  el("ai-results")?.classList.add("ai-hidden");
-  el("ai-processing")?.classList.add("ai-hidden");
-})();
+    // Hide results on initial load
+    const el = id => document.getElementById(id);
+    el("ai-errors")?.classList.add("ai-hidden");
+    el("ai-schools")?.classList.add("ai-hidden");
+    el("ai-results")?.classList.add("ai-hidden");
+    el("ai-processing")?.classList.add("ai-hidden");
+  } catch (e) {
+    console.error('AidVisorInit failed:', e);
+  }
+};
+
+// Main initialization (runs on first page load)
+(function init() { window.AidVisorInit?.(); })();
