@@ -1,0 +1,47 @@
+# Ignore secrets and sensitive data
+secrets/
+*.key
+*.pem
+openai.json
+
+# Prevent accidental commit of API keys
+**/openai.json
+
+# Go build artifacts
+Endpoint/data/
+Endpoint/college_details_cache/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go test files
+*.test
+*.out
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*_backup.*
+*_old.*
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
+
+# Draft/temporary files
+draft/
+temp/
+tmp/
