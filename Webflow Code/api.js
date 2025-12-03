@@ -69,8 +69,8 @@ const APIController = (() => {
     const start = performance.now();
 
     if (avgMs && avgMs > 0) {
-      let wait_time = (avgMs / 2);
-      await wait(Math.max(0, wait_time + (wait_time / 2)), signal);
+      let wait_time = avgMs * 1.5;
+      await wait(Math.max(0, wait_time), signal);
     }
 
     while (!signal.aborted && jobId && token === activePollToken && !hasFinalResult) {
