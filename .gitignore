@@ -25,6 +25,7 @@ Endpoint/college_details_cache/
 *.swp
 *.swo
 *~
+.obsidian/
 
 # OS files
 .DS_Store

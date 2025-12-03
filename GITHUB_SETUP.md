@@ -39,7 +39,7 @@ GitHub will show you commands. Use these (replace with your actual values):
 
 ```powershell
 # Add GitHub as remote
-git remote add origin https://github.com/YOUR_USERNAME/aidvisor.git
+git remote add origin https://github.com/StephenZepeda/Aurora-Mentor-AI.git
 
 # Push your code
 git branch -M main
