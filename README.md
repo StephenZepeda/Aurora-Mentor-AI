@@ -81,41 +81,16 @@ If you prefer not to paste CSS into Webflow, you can load the stylesheet directl
 
 Place this in Webflow Project Settings → Custom Code → Head Code. Replace `YOUR_USERNAME` and ensure your repo name matches.
 
-### 4. Load HTML from GitHub (via script)
+### 4. Preferred: Paste HTML via Embed (simplest & most reliable)
 
-You can load `Aidvisor.html` dynamically from GitHub/CDN and inject it into a placeholder element on your Webflow page. Add a placeholder element where the form should appear, for example:
+For stability, paste the contents of `Webflow Code/Aidvisor.html` directly into a Webflow **Embed** element. Keep CSS/JS loaded via CDN as described above.
 
-```html
-<div id="aidvisor-form-mount"></div>
-```
+Script order checklist (Webflow Project Settings):
+- Head Code: `<link rel="stylesheet" ... Aidvisor.css>`
+- Footer Code: JS files in this order: `wizard.js`, `form.js`, `api.js`, `ui.js`, `details.js`, `Aidvisor_main.js`
+- Place the Embed with the form markup on the page
 
-Then add this script in Webflow **Footer Code** (after your other scripts):
-
-```html
-<script>
-   (function loadAidvisorHTML(){
-      const mountId = 'aidvisor-form-mount';
-      const el = document.getElementById(mountId);
-      if (!el) { console.error('Missing mount element #' + mountId); return; }
-
-      const url = 'https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/Aidvisor.html';
-      // const url = 'https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor.html'; // GitHub Pages alternative
-
-      fetch(url, { cache: 'no-cache' })
-            .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-            .then(html => {
-               el.innerHTML = html;
-               // After injecting markup, initialize components
-               if (window.AidVisorInit) window.AidVisorInit();
-            })
-         .catch(err => { console.error('Failed to load Aidvisor.html:', err); });
-   })();
-</script>
-```
-
-Notes:
-- Replace `YOUR_USERNAME` and, if different, `aidvisor` with your actual repository name.
-- Ensure your CSS and JS files are also included (via jsDelivr or GitHub Pages) so the injected HTML has styling and logic.
+Optional (advanced): dynamic HTML injection is documented in `GITHUB_SETUP.md`, but the Embed approach is recommended.
 
 ## Frontend Setup (Webflow)
 
