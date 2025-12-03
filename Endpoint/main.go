@@ -39,12 +39,20 @@ func withCORS(next http.Handler) http.Handler {
 		for _, o := range allowedOrigins {
 			if o == origin {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
+				// If you need cookies/authorization across origins, enable credentials
+				// w.Header().Set("Access-Control-Allow-Credentials", "true")
 				break
 			}
 		}
 		w.Header().Set("Vary", "Origin") // tells caches the response varies by Origin
 		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
+		// Ensure common headers are allowed even if the browser doesn't send Access-Control-Request-Headers
+		reqHeaders := r.Header.Get("Access-Control-Request-Headers")
+		allowHeaders := "Content-Type"
+		if reqHeaders != "" {
+			allowHeaders = allowHeaders + ", " + reqHeaders
+		}
+		w.Header().Set("Access-Control-Allow-Headers", allowHeaders)
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
