@@ -1,0 +1,443 @@
+<!-- AidVisor: Single embed block for Webflow -->
+
+<!-- 1) Load CSS (via CDN) -->
+<style>
+@import url('https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/Aidvisor.css');
+</style>
+
+<!-- 2) Paste the HTML markup -->
+<div class="ai-wrap" id="main-ai-wrap">
+  <form id="admissions-form" class="ai-card" novalidate>
+    <h2>Build Your Admissions Profile</h2>
+    <div class="ai-body">
+      <div class="ai-steps" id="ai-steps">
+        <div class="ai-step-dot active" data-step="0">1. Academic Profile</div>
+        <div class="ai-step-dot" data-step="1">2. Career &amp; Major</div>
+        <div class="ai-step-dot" data-step="2">3. Financial Planning</div>
+        <div class="ai-step-dot" data-step="3">4. Campus &amp; Location</div>
+        <div class="ai-step-dot" data-step="4">5. Lifestyle</div>
+        <div class="ai-step-dot" data-step="5">6. Application Strategy</div>
+      </div>
+
+      <section class="ai-step" data-step="0">
+        <div class="ai-grid">
+          <div class="ai-field">
+            <label class="ai-label">GPA (Unweighted)</label>
+            <input id="gpa" class="ai-input" placeholder="e.g., 3.85" required>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Weighted GPA</label>
+            <input id="weighted_gpa" class="ai-input" placeholder="e.g., 4.35 (optional)">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">SAT / ACT Score</label>
+            <input id="test_score" class="ai-input" placeholder="e.g., SAT 1450 or ACT 33">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Class Rank</label>
+            <select id="class_rank" class="ai-select">
+              <option value="">Select one</option>
+              <optgroup label="Exact honors">
+                <option value="Valedictorian">Valedictorian (1st)</option>
+                <option value="Salutatorian">Salutatorian (2nd)</option>
+              </optgroup>
+              <optgroup label="Percentile (recommended)">
+                <option>Top 1%</option>
+                <option>Top 5%</option>
+                <option>Top 10%</option>
+                <option>Top 15%</option>
+                <option>Top 20%</option>
+                <option>Top 25%</option>
+                <option>Top 33%</option>
+                <option>Top 50%</option>
+                <option>Below 50%</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option>School does not rank</option>
+                <option>Unknown</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="ai-field ai-full">
+            <label class="ai-label">AP Classes / IB Classes / Dual Enrollment</label>
+            <textarea id="coursework" class="ai-textarea" placeholder="List courses or 'none'"></textarea>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Accept AP/IB Credit?</label>
+            <select id="accept_ap_ib" class="ai-select">
+              <option value="">Select one</option>
+              <option>Required</option>
+              <option>Nice to have</option>
+              <option>No preference</option>
+            </select>
+            <div class="ai-hint"><strong>FYI:</strong> This is about what colleges accept for credit/placement.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ai-step ai-hidden" data-step="1">
+        <div class="ai-grid">
+          <div class="ai-field ai-full">
+            <label class="ai-label">Intended Major</label>
+            <input id="intended_major" class="ai-input" placeholder="e.g., Computer Science" required>
+          </div>
+          <div class="ai-field ai-full">
+            <label class="ai-label">Career Goal</label>
+            <input id="career_goal" class="ai-input" placeholder="e.g., Investment Banking, MD, AI Researcher">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Career Flexibility</label>
+            <select id="career_flexibility" class="ai-select">
+              <option value="">Select one</option>
+              <option>open to exploring other majors</option>
+              <option>set on this career path</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Career Outcomes Priority</label>
+            <select id="outcomes_priority" class="ai-select">
+              <option value="">Select one</option>
+              <option>Co-ops/internships</option>
+              <option>Job placement</option>
+              <option>Grad school prep</option>
+              <option>Entrepreneurship</option>
+            </select>
+          </div>
+          <div class="ai-field ai-full ai-hidden" id="outcomes_details_wrap">
+            <label class="ai-label" id="outcomes_details_label">Tell us more</label>
+            <input id="outcomes_details" class="ai-input" placeholder="e.g., Goldman Sachs IB, MD pathway with research">
+          </div>
+          <div class="ai-field ai-full">
+            <label class="ai-label">Must-Have Program Features</label>
+            <textarea id="program_features" class="ai-textarea" placeholder="e.g., honors college, co-ops, undergraduate research"></textarea>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Teaching Style Preference</label>
+            <select id="teaching_style" class="ai-select">
+              <option value="">No preference</option>
+              <option>Lecture-heavy</option>
+              <option>Project-based</option>
+              <option>Discussion/Seminar</option>
+              <option>Competency-based</option>
+              <option>Flipped classroom</option>
+              <option>Other (specify below)</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Preferred Class Size</label>
+            <select id="class_size" class="ai-select">
+              <option value="">Select one</option>
+              <option>Seminar (≤20)</option>
+              <option>Small (21–40)</option>
+              <option>Medium (41–80)</option>
+              <option>Large (81+)</option>
+            </select>
+          </div>
+          <div class="ai-field ai-full">
+            <input id="teaching_style_other" class="ai-input" placeholder="If 'Other', describe teaching style (optional)">
+          </div>
+        </div>
+      </section>
+
+      <section class="ai-step ai-hidden" data-step="2">
+        <div class="ai-grid">
+          <div class="ai-field">
+            <label class="ai-label">Budget (annual, tuition + room/board)</label>
+            <select id="budget" class="ai-select">
+              <option value="">Select one</option>
+              <option>$0–$5k / year</option>
+              <option>$6–$10k / year</option>
+              <option>$11–$15k / year</option>
+              <option>$16–$20k / year</option>
+              <option>$21–$30k / year</option>
+              <option>$31–$40k / year</option>
+              <option>$41–$50k / year</option>
+              <option>$51–$70k / year</option>
+              <option>$71k+ / year</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">EFC/SAI (per year)</label>
+            <select id="efc_sai" class="ai-select">
+              <option value="">Select one</option>
+              <option>EFC/SAI $0</option>
+              <option>EFC/SAI $1–$5k</option>
+              <option>EFC/SAI $6–$10k</option>
+              <option>EFC/SAI $11–$20k</option>
+              <option>EFC/SAI $21–$35k</option>
+              <option>EFC/SAI $36k+</option>
+            </select>
+            <div class="ai-hint"><strong>EFC/SAI:</strong> Your Expected Family Contribution / Student Aid Index.</div>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Applying for Financial Aid?</label>
+            <select id="will_apply_aid" class="ai-select">
+              <option value="">Select one</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Scholarship Interest</label>
+            <select id="scholarship_interest" class="ai-select">
+              <option value="">Select one</option>
+              <option>merit-based</option>
+              <option>need-based</option>
+              <option>both</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Merit Aid Importance</label>
+            <select id="merit_aid_importance" class="ai-select">
+              <option value="">Select one</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="ai-step ai-hidden" data-step="3">
+        <div class="ai-grid">
+          <div class="ai-field">
+            <label class="ai-label">Your ZIP Code</label>
+            <input id="zip_code" class="ai-input" placeholder="e.g., 94103">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Distance from Home</label>
+            <select id="distance_from_home" class="ai-select">
+              <option value="">Select one</option>
+              <option>≤50 mi</option>
+              <option>≤150 mi</option>
+              <option>≤500 mi</option>
+              <option>Any</option>
+            </select>
+          </div>
+          <div class="ai-field ai-full">
+            <label class="ai-label">Region Preferences</label>
+            <input id="region_keywords" class="ai-input" placeholder="e.g., Northeast, West, Pacific NW">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Campus Setting</label>
+            <select id="campus_setting" class="ai-select">
+              <option value="">Select one</option>
+              <option>Urban</option>
+              <option>Suburban</option>
+              <option>Small town</option>
+              <option>Rural</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Climate Preference</label>
+            <select id="climate" class="ai-select">
+              <option value="">Select one</option>
+              <option>Warm</option>
+              <option>Mild</option>
+              <option>Cold</option>
+              <option>Four seasons</option>
+            </select>
+          </div>
+          <div class="ai-field ai-full">
+            <label class="ai-label">Preferred Geographic Features</label>
+            <div class="ai-pillbox" id="geo_features">
+              <label class="ai-chip"><input type="checkbox" value="Beach">Beach</label>
+              <label class="ai-chip"><input type="checkbox" value="Mountains">Mountains</label>
+              <label class="ai-chip"><input type="checkbox" value="Snow / winter sports">Snow / winter sports</label>
+              <label class="ai-chip"><input type="checkbox" value="Lakes / rivers">Lakes / rivers</label>
+              <label class="ai-chip"><input type="checkbox" value="Desert">Desert</label>
+              <label class="ai-chip"><input type="checkbox" value="Forest">Forest</label>
+              <label class="ai-chip"><input type="checkbox" value="Coastal">Coastal</label>
+              <label class="ai-chip"><input type="checkbox" value="Cityscape">Cityscape</label>
+            </div>
+            <input id="geo_features_other" class="ai-input" placeholder="Other geographic features (optional)">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Type of School</label>
+            <select id="school_type" class="ai-select">
+              <option value="">Select one</option>
+              <option>Research university</option>
+              <option>Liberal arts college</option>
+              <option>Polytechnic / Institute</option>
+              <option>Art / Design focused</option>
+              <option>Business focused</option>
+              <option>Religious-affiliated</option>
+              <option>HBCU / HSI / MSI</option>
+              <option>Other (specify below)</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">School Preference</label>
+            <select id="school_preference" class="ai-select">
+              <option value="">Select one</option>
+              <option>in-state public</option>
+              <option>in-state private</option>
+              <option>out-of-state public</option>
+              <option>out-of-state private</option>
+              <option>open to all</option>
+            </select>
+          </div>
+          <div class="ai-field ai-full">
+            <input id="school_type_other" class="ai-input" placeholder="If 'Other' school type, describe (optional)">
+          </div>
+        </div>
+      </section>
+
+      <section class="ai-step ai-hidden" data-step="4">
+        <div class="ai-grid">
+          <div class="ai-field ai-full">
+            <label class="ai-label">Housing Preferences</label>
+            <select id="housing_preference" class="ai-select">
+              <option value="">Select one</option>
+              <option>Apartment-style</option>
+              <option>Traditional dorm</option>
+              <option>Quiet / wellness housing</option>
+              <option>Learning living community (LLC)</option>
+              <option>On-campus guaranteed (first year)</option>
+              <option>Off-campus allowed (upperclass)</option>
+              <option>Suite-style</option>
+              <option>Theme / affinity housing</option>
+              <option>No preference</option>
+            </select>
+            <input id="housing_keywords" class="ai-input" placeholder="Optional details (keywords): e.g., apartment-style, LLC, quiet dorms">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Social Scene</label>
+            <select id="social_scene" class="ai-select">
+              <option value="">Select one</option>
+              <option>Quiet / low key</option>
+              <option>Balanced</option>
+              <option>Spirited / athletics</option>
+              <option>Greek life-heavy</option>
+              <option>Bar town / nightlife</option>
+              <option>Other (specify below)</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Academic Calendar</label>
+            <select id="academic_calendar" class="ai-select">
+              <option value="">Select one</option>
+              <option>Semester</option>
+              <option>Quarter</option>
+              <option>No preference</option>
+            </select>
+          </div>
+          <div class="ai-field ai-full">
+            <input id="social_scene_other" class="ai-input" placeholder="If 'Other' social scene, describe (optional)">
+          </div>
+          <div class="ai-field ai-full">
+            <label class="ai-label">Preferred Activities &amp; Extracurriculars</label>
+            <input id="activities_keywords" class="ai-input" placeholder="e.g., pre-professional clubs, D1 athletics, theatre">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Study Abroad Importance</label>
+            <select id="study_abroad" class="ai-select">
+              <option value="">Select one</option>
+              <option>Must have</option>
+              <option>Nice to have</option>
+              <option>No preference</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Format</label>
+            <select id="format" class="ai-select">
+              <option value="">Select one</option>
+              <option>In-person</option>
+              <option>Hybrid</option>
+              <option>Fully online</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="ai-step ai-hidden" data-step="5">
+        <div class="ai-grid">
+          <div class="ai-field">
+            <label class="ai-label">Number of Schools to Match</label>
+            <input id="school_amount" class="ai-input" placeholder="Amount of Schools [1-10]" required>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Start Year</label>
+            <input id="start_year" class="ai-input" placeholder="e.g., 2026">
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Curriculum Flexibility</label>
+            <select id="curriculum_flexibility" class="ai-select">
+              <option value="">Select one</option>
+              <option>Open curriculum required</option>
+              <option>Flexible / light requirements</option>
+              <option>Traditional core/distribution</option>
+              <option>No preference</option>
+            </select>
+          </div>
+          <div class="ai-field">
+            <label class="ai-label">Alumni Network Importance</label>
+            <select id="alumni_network_importance" class="ai-select">
+              <option value="">Select one</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <div class="ai-actions">
+        <button type="button" class="ai-btn ai-secondary" id="prev-btn">Back</button>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="ai-btn ai-secondary" id="save-draft-btn">Save Draft</button>
+          <button type="submit" class="ai-btn ai-primary" id="submit-btn">Get My Matches</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div id="ai-results" class="ai-hidden">
+  <div id="ai-errors" class="ai-hidden"></div>
+  <div id="ai-refine" class="ai-refine">
+    <h4>Refine Colleges</h4>
+    <div class="ai-refine-grid">
+      <div class="ai-field">
+        <label class="ai-label">Include colleges</label>
+        <input id="include_colleges" class="ai-input" placeholder="Comma-separated names, e.g., Florida Atlantic University, University of New Orleans">
+        <div class="ai-badge-note">Leave blank for no changes.</div>
+      </div>
+      <div class="ai-field">
+        <label class="ai-label">Exclude Colleges (hide these)</label>
+        <input id="exclude_colleges" class="ai-input" placeholder="Comma-separated names, e.g., Florida International University">
+        <div class="ai-badge-note">Case-insensitive, partial matches OK.</div>
+      </div>
+    </div>
+    <div class="ai-refine-actions">
+      <button type="button" id="btn-refine-rerun" class="ai-btn ai-secondary">Re-run With Filters</button>
+    </div>
+  </div>
+  <div id="ai-schools" class="ai-hidden"></div>
+  <div id="ai-processing" class="ai-processing ai-hidden">
+    <div class="ai-spinner"></div>
+    <span>Processing your request… this may take a couple minutes.</span>
+  </div>
+  <div style="display:flex; flex-direction:column; align-items:center; gap:8px; margin:6px 0 18px;">
+    <div id="ai-progress" class="ai-progress ai-hidden">
+      <div id="ai-progress-bar" class="ai-progress-bar"></div>
+    </div>
+    <div id="ai-eta" class="ai-eta ai-hidden">Estimating…</div>
+  </div>
+</div>
+
+<!-- 3) Load JS (via CDN, order matters) -->
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/wizard.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/form.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/api.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/ui.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/details.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/Aidvisor_main.js"></script>
+
+<!-- 4) Initialize after scripts load -->
+<script>
+  // Ensure wizard starts on step 0 and binds events
+  if (window.AidVisorInit) {
+    try { window.AidVisorInit(); } catch(e) { console.error(e); }
+  }
+</script>
