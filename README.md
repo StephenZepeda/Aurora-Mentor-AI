@@ -72,12 +72,47 @@ See **[GITHUB_SETUP.md](GITHUB_SETUP.md)** for complete instructions on:
 
 If you prefer not to paste CSS into Webflow, you can load the stylesheet directly from the CDN:
 
+- StephenZepeda/Aurora-Mentor-AI
+
 ```html
 <!-- AidVisor CSS via jsDelivr CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/Aidvisor.css">
 ```
 
 Place this in Webflow Project Settings → Custom Code → Head Code. Replace `YOUR_USERNAME` and ensure your repo name matches.
+
+### 4. Load HTML from GitHub (via script)
+
+You can load `Aidvisor.html` dynamically from GitHub/CDN and inject it into a placeholder element on your Webflow page. Add a placeholder element where the form should appear, for example:
+
+```html
+<div id="aidvisor-form-mount"></div>
+```
+
+Then add this script in Webflow **Footer Code** (after your other scripts):
+
+```html
+<script>
+   (function loadAidvisorHTML(){
+      const mountId = 'aidvisor-form-mount';
+      const el = document.getElementById(mountId);
+      if (!el) { console.error('Missing mount element #' + mountId); return; }
+
+      // Choose one source:
+      const url = 'https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.html';
+      // const url = 'https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor.html'; // GitHub Pages alternative
+
+      fetch(url, { cache: 'no-cache' })
+         .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+         .then(html => { el.innerHTML = html; })
+         .catch(err => { console.error('Failed to load Aidvisor.html:', err); });
+   })();
+</script>
+```
+
+Notes:
+- Replace `YOUR_USERNAME` and, if different, `aidvisor` with your actual repository name.
+- Ensure your CSS and JS files are also included (via jsDelivr or GitHub Pages) so the injected HTML has styling and logic.
 
 ## Frontend Setup (Webflow)
 
@@ -89,12 +124,12 @@ In Webflow **Project Settings → Custom Code → Footer Code**:
 
 ```html
 <!-- AidVisor Scripts via jsDelivr CDN -->
-<script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/wizard.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/form.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/api.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/ui.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/details.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor_main.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/wizard.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/form.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/api.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/ui.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/details.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/StephenZepeda/Aurora-Mentor-AI@main/Webflow%20Code/Aidvisor_main.js"></script>
 ```
 
 Replace `YOUR_USERNAME` with your GitHub username.

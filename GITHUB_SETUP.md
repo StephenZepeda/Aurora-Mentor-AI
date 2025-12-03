@@ -97,6 +97,20 @@ After pushing to GitHub, add this to Webflow **Project Settings → Custom Code 
 <script src="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor_main.js"></script>
 <!-- AidVisor CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.css">
+
+<!-- Optional: Dynamically load HTML markup -->
+<script>
+   (function(){
+      const mountId = 'aidvisor-form-mount';
+      const el = document.getElementById(mountId);
+      if (!el) return; // create <div id="aidvisor-form-mount"></div> where the form should appear
+      const url = 'https://cdn.jsdelivr.net/gh/YOUR_USERNAME/aidvisor@main/Webflow%20Code/Aidvisor.html';
+      fetch(url, { cache: 'no-cache' })
+         .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+         .then(html => { el.innerHTML = html; })
+         .catch(err => { console.error('Failed to load Aidvisor.html:', err); });
+   })();
+</script>
 ```
 
 Replace `YOUR_USERNAME` with your GitHub username.
@@ -120,6 +134,20 @@ Then use these script tags in Webflow:
 <script src="https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor_main.js"></script>
 <!-- AidVisor CSS -->
 <link rel="stylesheet" href="https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor.css">
+
+<!-- Optional: Dynamically load HTML markup -->
+<script>
+   (function(){
+      const mountId = 'aidvisor-form-mount';
+      const el = document.getElementById(mountId);
+      if (!el) return; // create <div id="aidvisor-form-mount"></div>
+      const url = 'https://YOUR_USERNAME.github.io/aidvisor/Webflow%20Code/Aidvisor.html';
+      fetch(url, { cache: 'no-cache' })
+         .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
+         .then(html => { el.innerHTML = html; })
+         .catch(err => { console.error('Failed to load Aidvisor.html:', err); });
+   })();
+</script>
 ```
 
 ## Updating Code After Changes
