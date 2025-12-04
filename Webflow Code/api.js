@@ -69,8 +69,7 @@ const APIController = (() => {
     const start = performance.now();
 
     if (avgMs && avgMs > 0) {
-      let wait_time = avgMs * 1.5;
-      await wait(Math.max(0, wait_time), signal);
+      await wait(Math.max(0, avgMs), signal);
     }
 
     while (!signal.aborted && jobId && token === activePollToken && !hasFinalResult) {
@@ -109,13 +108,8 @@ const APIController = (() => {
     const signal = pollAbort.signal;
     const myToken = ++activePollToken;
 
-    const MAX_WAIT_MS = 5 * 60 * 1000;
-
-    pollTimeout = setTimeout(() => {
-      abortPolling();
-      onError("Processing timed out. Please try again.");
-    }, MAX_WAIT_MS);
-
+    const MAX_WAIT_MS = 6 * 60 * 1000;
+    
     pollLoop(jobId, myToken, signal, MAX_WAIT_MS, avgMs, onSchools, onError);
   }
 

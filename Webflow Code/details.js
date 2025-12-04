@@ -119,7 +119,7 @@ const DetailsController = (() => {
         <div class="ai-progress-wrap" style="margin-top:12px;background:#eee;border-radius:8px;overflow:hidden;height:10px;">
           <div class="ai-progress-bar" style="height:10px;width:0%;transition:width .2s;"></div>
         </div>
-        <div class="ai-progress-meta" style="margin-top:8px;font-size:12px;color:#555;">
+        <div class="ai-progress-meta">
           <span class="eta">Estimating time…</span>
           ${samples > 5 ? `<span> • (based on ${samples} samples)</span>` : ``}
         </div>

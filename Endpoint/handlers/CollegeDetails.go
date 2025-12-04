@@ -95,27 +95,27 @@ func writeCache(path string, content []byte) error {
 
 // POST /CollegeAdvisorDetails
 func SchoolDetails(w http.ResponseWriter, r *http.Request) {
-	dbgPrintf("[Details] Request received from %s\n", r.RemoteAddr)
+	dbgPrintf("[SchoolDetails] Request received from %s\n", r.RemoteAddr)
 
 	if r.Method == http.MethodOptions {
-		dbgPrintf("[Details] OPTIONS request - sending no content\n")
+		dbgPrintf("[SchoolDetails] OPTIONS request - sending no content\n")
 		writeJSON(w, http.StatusNoContent, map[string]string{"error": "MethodOptions no content"})
 		return
 	}
 	if r.Method != http.MethodPost {
-		dbgPrintf("[Details] Invalid method: %s\n", r.Method)
+		dbgPrintf("[SchoolDetails] Invalid method: %s\n", r.Method)
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 	defer r.Body.Close()
 
-	dbgPrintf("[Details] Decoding request payload\n")
+	dbgPrintf("[SchoolDetails] Decoding request payload\n")
 
 	var req SchoolDetailsRequest
 	dec := json.NewDecoder(io.LimitReader(r.Body, 1<<20))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&req); err != nil {
-		warnPrintf("[Details] JSON decode error: %v\n", err)
+		warnPrintf("[SchoolDetails] JSON decode error: %v\n", err)
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"error":          "invalid json",
 			"invalid_fields": map[string]any{"_": BuildJSONErrorDetail(err, r)},
@@ -124,7 +124,7 @@ func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	school := strings.TrimSpace(req.School)
 	if school == "" {
-		dbgPrintf("[Details] Missing school name\n")
+		dbgPrintf("[SchoolDetails] Missing school name\n")
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing 'school' name"})
 		return
 	}
@@ -176,8 +176,8 @@ func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 }
 
 func SchoolDetails_ChatGpt(req SchoolDetailsRequest, school string, cachePath string, id string) {
-	dbgPrintf("(ID)[%s] [Background] Details goroutine started for: %s\n", id, school)
-	dbgPrintf("(ID)[%s] Saving initial 'Processing' status\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Background goroutine started for: %s\n", id, school)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Saving initial 'Processing' status\n", id)
 	savePrompt(id, "Processing")
 
 	// Compact profile summary for the prompt
@@ -185,21 +185,21 @@ func SchoolDetails_ChatGpt(req SchoolDetailsRequest, school string, cachePath st
 	if req.Profile != nil {
 		if b, err := json.MarshalIndent(req.Profile, "", "  "); err == nil {
 			profileJSON = string(b)
-			dbgPrintf("(ID)[%s] Student profile included (%d chars)\n", id, len(profileJSON))
+			dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Student profile included (%d chars)\n", id, len(profileJSON))
 		}
 	} else {
-		dbgPrintf("(ID)[%s] No student profile provided\n", id)
+		dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] No student profile provided\n", id)
 	}
 
-	dbgPrintf("(ID)[%s] Retrieving OpenAI API key\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Retrieving OpenAI API key\n", id)
 	key, kerr := getAPIKey()
 	if kerr != nil {
-		errPrintf("(ID)[%s] ✗ Error getting API key: %v\n", id, kerr)
+		errPrintf("[SchoolDetails_ChatGpt] (ID)[%s] ✗ Error getting API key: %v\n", id, kerr)
 		savePrompt(id, `{"error":"`+escapeJSON(kerr.Error())+`"}`)
 		return
 	}
-	dbgPrintf("(ID)[%s] API key retrieved successfully\n", id)
-	dbgPrintf("(ID)[%s] Initializing OpenAI client\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] API key retrieved successfully\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Initializing OpenAI client\n", id)
 	client := openai.NewClient(option.WithAPIKey(key))
 
 	// Prompt: ask for STRICT JSON with fields your JS expects.
@@ -252,11 +252,11 @@ Guidelines:
 - Output ONLY the JSON object.
 `, school, profileJSON)
 
-	dbgPrintf("(ID)[%s] Creating context with 3-minute timeout\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Creating context with 3-minute timeout\n", id)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	dbgPrintf("(ID)[%s] Sending request to OpenAI GPT-5 API...\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Sending request to OpenAI GPT-5 API...\n", id)
 	start := time.Now()
 	resp, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Model: openai.ChatModelGPT5,
@@ -268,39 +268,39 @@ Guidelines:
 
 	// Record latency like Advisor()
 	elapsed := time.Since(start)
-	dbgPrintf("(ID)[%s] OpenAI API call completed in %.3fs\n", id, elapsed.Seconds())
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] OpenAI API call completed in %.3fs\n", id, elapsed.Seconds())
 	DetailsLatency.record(elapsed)
 
 	if err != nil {
-		errPrintf("(ID)[%s] ✗ OpenAI API error: %v\n", id, err)
+		errPrintf("[SchoolDetails_ChatGpt] (ID)[%s] ✗ OpenAI API error: %v\n", id, err)
 		savePrompt(id, `{"error":"`+escapeJSON(err.Error())+`"}`)
 		return
 	}
-	dbgPrintf("(ID)[%s] ✓ API call successful\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] ✓ API call successful\n", id)
 	out := resp.Choices[0].Message.Content
-	dbgPrintf("(ID)[%s] Response length: %d chars\n", id, len(out))
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Response length: %d chars\n", id, len(out))
 
 	// Enforce strict JSON before sending to the client.
-	dbgPrintf("(ID)[%s] Validating JSON response from model\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Validating JSON response from model\n", id)
 	var js any
 	if jerr := json.Unmarshal([]byte(out), &js); jerr != nil {
-		errPrintf("(ID)[%s] ✗ JSON validation failed: %v\n", id, jerr)
+		errPrintf("[SchoolDetails_ChatGpt] (ID)[%s] ✗ JSON validation failed: %v\n", id, jerr)
 		savePrompt(id, `{"error":"model did not return valid JSON"}`)
 		return
 	}
 
-	dbgPrintf("(ID)[%s] ✓ JSON validation passed\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] ✓ JSON validation passed\n", id)
 
 	// Cache the valid JSON (best-effort)
-	dbgPrintf("(ID)[%s] Saving details to cache: %s\n", id, cachePath)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Saving details to cache: %s\n", id, cachePath)
 	if err := writeCache(cachePath, []byte(out)); err != nil {
 		warnPrintf("(School)[%s] ✗ Cache write error: %v\n", school, err)
 	} else {
 		dbgPrintf("(School)[%s] ✓ Details cached successfully\n", school)
 	}
 
-	dbgPrintf("(ID)[%s] (School)[%s] ChatGPT processing complete (%.3fs)\n", id, school, elapsed.Seconds())
-	dbgPrintf("(ID)[%s] Saving result to prompt store\n", id)
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] (School)[%s] ChatGPT processing complete (%.3fs)\n", id, school, elapsed.Seconds())
+	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] Saving result to prompt store\n", id)
 	savePrompt(id, out)
 }
 
@@ -312,32 +312,32 @@ Guidelines:
 //	{ "status":"error", "message":"..." }
 func SchoolDetailsStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions {
-		dbgPrintf("[DetailsStatus] OPTIONS request - sending no content\n")
+		dbgPrintf("[SchoolDetailsStatus] OPTIONS request - sending no content\n")
 		writeJSON(w, http.StatusNoContent, map[string]string{"error": "MethodOptions no content"})
 		return
 	}
 	if r.Method != http.MethodGet {
-		dbgPrintf("[DetailsStatus] Invalid method: %s\n", r.Method)
+		dbgPrintf("[SchoolDetailsStatus] Invalid method: %s\n", r.Method)
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
 
 	id := strings.TrimSpace(r.URL.Query().Get("id"))
 	if id == "" {
-		dbgPrintf("[DetailsStatus] Missing ID parameter\n")
+		dbgPrintf("[SchoolDetailsStatus] Missing ID parameter\n")
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "missing id"})
 		return
 	}
 
-	dbgPrintf("(ID)[%s] Status check requested\n", id)
+	dbgPrintf("[SchoolDetailsStatus] (ID)[%s] Status check requested\n", id)
 	val, ok := getPrompt(id)
 	if !ok {
-		dbgPrintf("(ID)[%s] ✗ ID not found in store\n", id)
+		dbgPrintf("[SchoolDetailsStatus] (ID)[%s] ✗ ID not found in store\n", id)
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 		return
 	}
 	if val == "Processing" {
-		dbgPrintf("(ID)[%s] Status: Still processing\n", id)
+		dbgPrintf("[SchoolDetailsStatus] (ID)[%s] Status: Still processing\n", id)
 		writeJSON(w, http.StatusOK, map[string]any{"status": "processing"})
 		return
 	}
@@ -345,7 +345,7 @@ func SchoolDetailsStatus(w http.ResponseWriter, r *http.Request) {
 	// Try parse as JSON output; if it fails, treat as error string JSON we saved above.
 	var parsed any
 	if err := json.Unmarshal([]byte(val), &parsed); err == nil {
-		dbgPrintf("(ID)[%s] ✓ Details complete, delivering to client\n", id)
+		dbgPrintf("[SchoolDetailsStatus] (ID)[%s] ✓ Details complete, delivering to client\n", id)
 		// Optional: delete once delivered to keep memory clean
 		deletePrompt(id)
 		writeJSON(w, http.StatusOK, map[string]any{"status": "done", "data": parsed})
@@ -353,6 +353,6 @@ func SchoolDetailsStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If it's not valid JSON, return as error
-	warnPrintf("(ID)[%s] Error status: %s\n", id, val)
+	warnPrintf("[SchoolDetailsStatus] (ID)[%s] Error status: %s\n", id, val)
 	writeJSON(w, http.StatusOK, map[string]any{"status": "error", "message": val})
 }

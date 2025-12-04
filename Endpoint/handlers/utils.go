@@ -69,12 +69,12 @@ func startCacheCleanup() {
 
 // cleanExpiredCache removes all cache files older than cacheTTL
 func cleanExpiredCache() {
-	dbgPrintf("[Cache] Starting weekly cache cleanup\n")
+	dbgPrintf("[cleanExpiredCache] Starting weekly cache cleanup\n")
 
 	entries, err := os.ReadDir(cacheDir)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			warnPrintf("[Cache] Error reading cache directory: %v\n", err)
+			warnPrintf("[cleanExpiredCache] Error reading cache directory: %v\n", err)
 		}
 		return
 	}
@@ -99,7 +99,7 @@ func cleanExpiredCache() {
 		}
 	}
 
-	dbgPrintf("[Cache] Cleanup complete: removed %d expired file(s)\n", removed)
+	dbgPrintf("[cleanExpiredCache] Cleanup complete: removed %d expired file(s)\n", removed)
 }
 
 func getCachedResponse(checksum string) (string, bool) {
