@@ -110,11 +110,15 @@ type errorResponse struct {
 // =====================================================
 
 func Advisor(w http.ResponseWriter, r *http.Request) {
+	dbgPrintf("[Advisor] Request received from %s\n", r.RemoteAddr)
+	
 	if r.Method == http.MethodOptions {
+		dbgPrintf("[Advisor] OPTIONS request - sending no content\n")
 		writeJSON(w, http.StatusNoContent, map[string]string{"error": "MethodOptions no content"})
 		return
 	}
 	if r.Method != http.MethodPost {
+		dbgPrintf("[Advisor] Invalid method: %s\n", r.Method)
 		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
 		return
 	}
@@ -123,16 +127,19 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 	// Generate job ID and return immediately with latency snapshot (avg + samples).
 	id, err := genID()
 	if err != nil {
+		dbgPrintf("[Advisor] Failed to generate ID: %v\n", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to generate id"})
 		return
 	}
 
-	dbgPrintf("(ID)[%s] Advisor req found\n", id)
+	dbgPrintf("(ID)[%s] New advisor request received\n", id)ved\n", id)
 
 	var req AdvisorRequest
 	dec := json.NewDecoder(io.LimitReader(r.Body, 1<<20)) // 1MB safety
 	dec.DisallowUnknownFields()
+	dbgPrintf("(ID)[%s] Decoding JSON payload\n", id)
 	if err := dec.Decode(&req); err != nil {
+		dbgPrintf("(ID)[%s] JSON decode error: %v\n", id, err)
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"invalid_fields": map[string]any{
 				"_": BuildJSONErrorDetail(err, r),
@@ -141,17 +148,18 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbgPrintf("(ID)[%s] Validating req\n", id)
+	dbgPrintf("(ID)[%s] Payload decoded successfully\n", id)
+	dbgPrintf("(ID)[%s] Validating request fields\n", id)
 	if invalid := validate(req); len(invalid) > 0 {
+		dbgPrintf("(ID)[%s] Validation failed: %d invalid field(s)\n", id, len(invalid))
 		writeJSON(w, http.StatusBadRequest, errorResponse{InvalidFields: invalid})
 		return
 	}
-
-	// Check cache before processing
-	checksum := checksumPayload(req)
-	dbgPrintf("(ID)[%s] Checksum: %s\n", id, checksum)
+	dbgPrintf("(ID)[%s] Validation passed\n", id)hecksum := checksumPayload(req)
+	dbgPrintf("(ID)[%s] Checksum calculated: %s\n", id, checksum)
+	dbgPrintf("(ID)[%s] Checking cache for existing response\n", id)
 	if cachedResp, found := getCachedResponse(checksum); found {
-		dbgPrintf("(ID)[%s] Cache hit! Returning cached response\n", id)
+		dbgPrintf("(ID)[%s] ✓ Cache HIT - returning cached response immediately\n", id)
 		// Return cached response immediately, skip AI processing
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": cachedResp,
@@ -159,35 +167,47 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dbgPrintf("(ID)[%s] Cache miss, building prompt\n", id)
+	dbgPrintf("(ID)[%s] ✗ Cache MISS - will process with AI\n", id)
+	dbgPrintf("(ID)[%s] Building prompt from payload\n", id)
 	prompt := buildPrompt(req)
-
+	dbgPrintf("(ID)[%s] Prompt built (length: %d chars)\n", id, len(prompt))
+	dbgPrintf("(ID)[%s] Retrieving latency statistics\n", id)
 	count, _, avg := getLatencySnapshot(AdvisorLatency)
+	dbgPrintf("(ID)[%s] Latency stats - samples: %d, avg: %.2fms\n", id, count, avg)
 
+	dbgPrintf("(ID)[%s] Sending initial response to client\n", id)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"id":             id,
 		"avg_chatgpt_ms": avg,   // float64
 		"samples":        count, // int64
 	})
+	dbgPrintf("(ID)[%s] Response sent, spawning background AI processing\n", id)
 
 	go Aidvisor_ChatGpt(prompt, id, checksum)
 }
 
 func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
-	dbgPrintf("(ID)[%s] Starting ChatGPT processing\n", id)
+	dbgPrintf("(ID)[%s] [Background] ChatGPT goroutine started\n", id)
+	dbgPrintf("(ID)[%s] Saving initial 'Processing' status\n", id)
 	savePrompt(id, "Processing")
 
+	dbgPrintf("(ID)[%s] Creating context with 10-minute timeout\n", id)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
+	dbgPrintf("(ID)[%s] Retrieving OpenAI API key\n", id)
 	key, kerr := getAPIKey()
 	if kerr != nil {
-		dbgPrintf("(ID)[%s] Error getting api key?\n", id)
+		dbgPrintf("(ID)[%s] ✗ Error getting API key: %v\n", id, kerr)
 		savePrompt(id, `{"error":"`+escapeJSON(kerr.Error())+`"}`)
 		return
 	}
+	dbgPrintf("(ID)[%s] API key retrieved successfully\n", id)
+	dbgPrintf("(ID)[%s] Initializing OpenAI client\n", id)
+	client := openai.NewClient(option.WithAPIKey(key)) id)
 	client := openai.NewClient(option.WithAPIKey(key))
 
+	dbgPrintf("(ID)[%s] Sending request to OpenAI GPT-5 API...\n", id)
 	start := time.Now()
 	resp, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Model: openai.ChatModelGPT5,
@@ -201,37 +221,43 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 	go func() {
 		time.Sleep(time.Minute * 10)
 		if _, check := getPrompt(id); check {
-			dbgPrintf("(ID)[%s] Auto-cleanup: deleting uncollected result\n", id)
+			dbgPrintf("(ID)[%s] [Cleanup] Auto-cleanup: deleting uncollected result\n", id)
 			deletePrompt(id)
 		}
 	}()
 
 	// Record duration for both success and error
 	elapsed := time.Since(start)
+	dbgPrintf("(ID)[%s] OpenAI API call completed in %.3fs\n", id, elapsed.Seconds())
 	AdvisorLatency.record(elapsed)
 
 	if err != nil {
-		dbgPrintf("(ID)[%s] OpenAI API error: %v\n", id, err)
+		dbgPrintf("(ID)[%s] ✗ OpenAI API error: %v\n", id, err)
 		savePrompt(id, `{"error":"`+escapeJSON(err.Error())+`"}`)
 		return
 	}
 
+	dbgPrintf("(ID)[%s] ✓ API call successful\n", id)
 	out := resp.Choices[0].Message.Content
+	dbgPrintf("(ID)[%s] Response length: %d chars\n", id, len(out))
 
-	dbgPrintf("(ID)[%s] Unmarshal the json\n", id)
+	dbgPrintf("(ID)[%s] Validating JSON response from model\n", id)rom model\n", id)
 	var js any
 	if jerr := json.Unmarshal([]byte(out), &js); jerr != nil {
-		dbgPrintf("(ID)[%s] Error w unmarshal\n", id)
+		dbgPrintf("(ID)[%s] ✗ JSON validation failed: %v\n", id, jerr)
 		savePrompt(id, `{"error":"model did not return valid JSON"}`)
 		return
 	}
 
+	dbgPrintf("(ID)[%s] ✓ JSON validation passed\n", id)
 	dbgPrintf("(ID)[%s] ChatGPT processing complete (%.3fs)\n", id, elapsed.Seconds())
+	dbgPrintf("(ID)[%s] Saving result to prompt store\n", id)
 	savePrompt(id, out)
 
 	// Save to cache
+	dbgPrintf("(ID)[%s] Saving response to disk cache (checksum: %s)\n", id, checksum)
 	saveCachedResponse(checksum, out)
-	dbgPrintf("(ID)[%s] Response cached with checksum: %s\n", id, checksum)
+	dbgPrintf("(ID)[%s] ✓ Response cached successfully\n", id)
 }
 
 // =====================================================
