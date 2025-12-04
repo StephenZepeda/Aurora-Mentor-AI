@@ -40,36 +40,30 @@ func Advisor_Fetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dbgPrintf("(ID)[%s] Fetching result from prompt store\n", body.ID)
-	promptStore.mu.RLock()
-	defer promptStore.mu.RUnlock()
-	defer promptStore.mu.RUnlock()
 
-	if body.ID != "" {
-		if val, ok := getPrompt(body.ID); ok {
-			if val == "Processing" {
-				dbgPrintf("(ID)[%s] Status: Still processing\n", body.ID)
-			} else if strings.Contains(val, "schools") {
-				dbgPrintf("(ID)[%s] ✓ Results ready, sending to client\n", body.ID)
-			} else {
-				dbgPrintf("(ID)[%s] Status: %s\n", body.ID, val)
-			}
-
-			writeJSON(w, http.StatusOK, map[string]string{
-				"success": val,
-			})
-
-			if strings.Contains(val, "schools") {
-				dbgPrintf("(ID)[%s] Final result delivered, cleaning up store\n", body.ID)
-				deletePrompt(body.ID)
-				return
-			}
-			return
-		}
+	val, ok := getPrompt(body.ID)
+	if !ok {
 		dbgPrintf("(ID)[%s] ✗ ID not found in store\n", body.ID)
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "invalid ID",
+		})
+		return
 	}
 
-	dbgPrintf("[Fetch] Invalid or missing ID\n")
-	writeJSON(w, http.StatusBadRequest, map[string]string{
-		"error": "invalid ID",
+	if val == "Processing" {
+		dbgPrintf("(ID)[%s] Status: Still processing\n", body.ID)
+	} else if strings.Contains(val, "schools") {
+		dbgPrintf("(ID)[%s] ✓ Results ready, sending to client\n", body.ID)
+	} else {
+		dbgPrintf("(ID)[%s] Status: %s\n", body.ID, val)
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"success": val,
 	})
+
+	if strings.Contains(val, "schools") {
+		dbgPrintf("(ID)[%s] Final result delivered, cleaning up store\n", body.ID)
+		deletePrompt(body.ID)
+	}
 }
