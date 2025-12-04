@@ -24,7 +24,7 @@ func Advisor_Fetch(w http.ResponseWriter, r *http.Request) {
 	}
 	dbgPrintf("[Fetch] Decoding request body\n")
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil && err != io.EOF {
-		dbgPrintf("[Fetch] JSON decode error: %v\n", err)
+		warnPrintf("[Fetch] JSON decode error: %v\n", err)
 		writeJSON(w, http.StatusOK, map[string]string{
 			"error": "invalid JSON: " + err.Error(),
 		})

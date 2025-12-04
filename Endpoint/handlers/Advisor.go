@@ -111,7 +111,7 @@ type errorResponse struct {
 
 func Advisor(w http.ResponseWriter, r *http.Request) {
 	dbgPrintf("[Advisor] Request received from %s\n", r.RemoteAddr)
-	
+
 	if r.Method == http.MethodOptions {
 		dbgPrintf("[Advisor] OPTIONS request - sending no content\n")
 		writeJSON(w, http.StatusNoContent, map[string]string{"error": "MethodOptions no content"})
@@ -127,19 +127,19 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 	// Generate job ID and return immediately with latency snapshot (avg + samples).
 	id, err := genID()
 	if err != nil {
-		dbgPrintf("[Advisor] Failed to generate ID: %v\n", err)
+		errPrintf("[Advisor] Failed to generate ID: %v\n", err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to generate id"})
 		return
 	}
 
-	dbgPrintf("(ID)[%s] New advisor request received\n", id)ved\n", id)
+	dbgPrintf("(ID)[%s] New advisor request received\n", id)
 
 	var req AdvisorRequest
 	dec := json.NewDecoder(io.LimitReader(r.Body, 1<<20)) // 1MB safety
 	dec.DisallowUnknownFields()
 	dbgPrintf("(ID)[%s] Decoding JSON payload\n", id)
 	if err := dec.Decode(&req); err != nil {
-		dbgPrintf("(ID)[%s] JSON decode error: %v\n", id, err)
+		warnPrintf("(ID)[%s] JSON decode error: %v\n", id, err)
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"invalid_fields": map[string]any{
 				"_": BuildJSONErrorDetail(err, r),
@@ -151,11 +151,15 @@ func Advisor(w http.ResponseWriter, r *http.Request) {
 	dbgPrintf("(ID)[%s] Payload decoded successfully\n", id)
 	dbgPrintf("(ID)[%s] Validating request fields\n", id)
 	if invalid := validate(req); len(invalid) > 0 {
-		dbgPrintf("(ID)[%s] Validation failed: %d invalid field(s)\n", id, len(invalid))
+		warnPrintf("(ID)[%s] Validation failed: %d invalid field(s)\n", id, len(invalid))
 		writeJSON(w, http.StatusBadRequest, errorResponse{InvalidFields: invalid})
 		return
 	}
-	dbgPrintf("(ID)[%s] Validation passed\n", id)hecksum := checksumPayload(req)
+	dbgPrintf("(ID)[%s] Validation passed\n", id)
+
+	// Check cache before processing
+	dbgPrintf("(ID)[%s] Computing payload checksum\n", id)
+	checksum := checksumPayload(req)
 	dbgPrintf("(ID)[%s] Checksum calculated: %s\n", id, checksum)
 	dbgPrintf("(ID)[%s] Checking cache for existing response\n", id)
 	if cachedResp, found := getCachedResponse(checksum); found {
@@ -198,13 +202,12 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 	dbgPrintf("(ID)[%s] Retrieving OpenAI API key\n", id)
 	key, kerr := getAPIKey()
 	if kerr != nil {
-		dbgPrintf("(ID)[%s] ✗ Error getting API key: %v\n", id, kerr)
+		errPrintf("(ID)[%s] ✗ Error getting API key: %v\n", id, kerr)
 		savePrompt(id, `{"error":"`+escapeJSON(kerr.Error())+`"}`)
 		return
 	}
 	dbgPrintf("(ID)[%s] API key retrieved successfully\n", id)
 	dbgPrintf("(ID)[%s] Initializing OpenAI client\n", id)
-	client := openai.NewClient(option.WithAPIKey(key)) id)
 	client := openai.NewClient(option.WithAPIKey(key))
 
 	dbgPrintf("(ID)[%s] Sending request to OpenAI GPT-5 API...\n", id)
@@ -232,7 +235,7 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 	AdvisorLatency.record(elapsed)
 
 	if err != nil {
-		dbgPrintf("(ID)[%s] ✗ OpenAI API error: %v\n", id, err)
+		errPrintf("(ID)[%s] ✗ OpenAI API error: %v\n", id, err)
 		savePrompt(id, `{"error":"`+escapeJSON(err.Error())+`"}`)
 		return
 	}
@@ -241,10 +244,10 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 	out := resp.Choices[0].Message.Content
 	dbgPrintf("(ID)[%s] Response length: %d chars\n", id, len(out))
 
-	dbgPrintf("(ID)[%s] Validating JSON response from model\n", id)rom model\n", id)
+	dbgPrintf("(ID)[%s] Validating JSON response from model\n", id)
 	var js any
 	if jerr := json.Unmarshal([]byte(out), &js); jerr != nil {
-		dbgPrintf("(ID)[%s] ✗ JSON validation failed: %v\n", id, jerr)
+		errPrintf("(ID)[%s] ✗ JSON validation failed: %v\n", id, jerr)
 		savePrompt(id, `{"error":"model did not return valid JSON"}`)
 		return
 	}

@@ -23,8 +23,20 @@ var (
 
 func dbgPrintf(format string, args ...any) {
 	if debug {
-		log.Printf(format, args...)
+		log.Printf("[DEBUG] "+format, args...)
 	}
+}
+
+func warnPrintf(format string, args ...any) {
+	log.Printf("[WARN] "+format, args...)
+}
+
+func errPrintf(format string, args ...any) {
+	log.Printf("[ERROR] "+format, args...)
+}
+
+func infoPrintf(format string, args ...any) {
+	log.Printf("[INFO] "+format, args...)
 }
 
 // ---- Response cache with checksum ----
@@ -62,7 +74,7 @@ func cleanExpiredCache() {
 	entries, err := os.ReadDir(cacheDir)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			dbgPrintf("[Cache] Error reading cache directory: %v\n", err)
+			warnPrintf("[Cache] Error reading cache directory: %v\n", err)
 		}
 		return
 	}

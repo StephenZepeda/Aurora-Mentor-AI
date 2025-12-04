@@ -96,7 +96,7 @@ func writeCache(path string, content []byte) error {
 // POST /CollegeAdvisorDetails
 func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 	dbgPrintf("[Details] Request received from %s\n", r.RemoteAddr)
-	
+
 	if r.Method == http.MethodOptions {
 		dbgPrintf("[Details] OPTIONS request - sending no content\n")
 		writeJSON(w, http.StatusNoContent, map[string]string{"error": "MethodOptions no content"})
@@ -109,13 +109,13 @@ func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	dbgPrintf("[Details] Decoding request payload\n")ayload\n")
+	dbgPrintf("[Details] Decoding request payload\n")
 
 	var req SchoolDetailsRequest
 	dec := json.NewDecoder(io.LimitReader(r.Body, 1<<20))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&req); err != nil {
-		dbgPrintf("[Details] JSON decode error: %v\n", err)
+		warnPrintf("[Details] JSON decode error: %v\n", err)
 		writeJSON(w, http.StatusBadRequest, map[string]any{
 			"error":          "invalid json",
 			"invalid_fields": map[string]any{"_": BuildJSONErrorDetail(err, r)},
@@ -141,7 +141,7 @@ func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(cached)
 		return
 	} else if err != nil {
-		dbgPrintf("(School)[%s] ✗ Cache read error: %v\n", school, err)
+		warnPrintf("(School)[%s] ✗ Cache read error: %v\n", school, err)
 	} else {
 		dbgPrintf("(School)[%s] ✗ Cache MISS - will generate details\n", school)
 	}
@@ -150,7 +150,7 @@ func SchoolDetails(w http.ResponseWriter, r *http.Request) {
 	dbgPrintf("(School)[%s] Generating job ID\n", school)
 	id, err := genID()
 	if err != nil {
-		dbgPrintf("(School)[%s] Failed to generate ID: %v\n", school, err)
+		errPrintf("(School)[%s] Failed to generate ID: %v\n", school, err)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to generate id"})
 		return
 	}
@@ -194,7 +194,7 @@ func SchoolDetails_ChatGpt(req SchoolDetailsRequest, school string, cachePath st
 	dbgPrintf("(ID)[%s] Retrieving OpenAI API key\n", id)
 	key, kerr := getAPIKey()
 	if kerr != nil {
-		dbgPrintf("(ID)[%s] ✗ Error getting API key: %v\n", id, kerr)
+		errPrintf("(ID)[%s] ✗ Error getting API key: %v\n", id, kerr)
 		savePrompt(id, `{"error":"`+escapeJSON(kerr.Error())+`"}`)
 		return
 	}
@@ -272,7 +272,7 @@ Guidelines:
 	DetailsLatency.record(elapsed)
 
 	if err != nil {
-		dbgPrintf("(ID)[%s] ✗ OpenAI API error: %v\n", id, err)
+		errPrintf("(ID)[%s] ✗ OpenAI API error: %v\n", id, err)
 		savePrompt(id, `{"error":"`+escapeJSON(err.Error())+`"}`)
 		return
 	}
@@ -284,7 +284,7 @@ Guidelines:
 	dbgPrintf("(ID)[%s] Validating JSON response from model\n", id)
 	var js any
 	if jerr := json.Unmarshal([]byte(out), &js); jerr != nil {
-		dbgPrintf("(ID)[%s] ✗ JSON validation failed: %v\n", id, jerr)
+		errPrintf("(ID)[%s] ✗ JSON validation failed: %v\n", id, jerr)
 		savePrompt(id, `{"error":"model did not return valid JSON"}`)
 		return
 	}
@@ -294,7 +294,7 @@ Guidelines:
 	// Cache the valid JSON (best-effort)
 	dbgPrintf("(ID)[%s] Saving details to cache: %s\n", id, cachePath)
 	if err := writeCache(cachePath, []byte(out)); err != nil {
-		dbgPrintf("(School)[%s] ✗ Cache write error: %v\n", school, err)
+		warnPrintf("(School)[%s] ✗ Cache write error: %v\n", school, err)
 	} else {
 		dbgPrintf("(School)[%s] ✓ Details cached successfully\n", school)
 	}
@@ -353,6 +353,6 @@ func SchoolDetailsStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If it's not valid JSON, return as error
-	dbgPrintf("(ID)[%s] Error status: %s\n", id, val)
+	warnPrintf("(ID)[%s] Error status: %s\n", id, val)
 	writeJSON(w, http.StatusOK, map[string]any{"status": "error", "message": val})
 }
