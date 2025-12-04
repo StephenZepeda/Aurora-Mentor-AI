@@ -36,7 +36,64 @@ type cachedResponse struct {
 
 const cacheDir = "data/response_cache"
 
+var cacheCleanupOnce sync.Once
+
+// startCacheCleanup runs a background goroutine that cleans expired cache files weekly
+func startCacheCleanup() {
+	cacheCleanupOnce.Do(func() {
+		go func() {
+			ticker := time.NewTicker(7 * 24 * time.Hour) // Run every week
+			defer ticker.Stop()
+
+			// Run immediately on startup, then weekly
+			cleanExpiredCache()
+
+			for range ticker.C {
+				cleanExpiredCache()
+			}
+		}()
+	})
+}
+
+// cleanExpiredCache removes all cache files older than cacheTTL
+func cleanExpiredCache() {
+	dbgPrintf("[Cache] Starting weekly cache cleanup\n")
+
+	entries, err := os.ReadDir(cacheDir)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			dbgPrintf("[Cache] Error reading cache directory: %v\n", err)
+		}
+		return
+	}
+
+	removed := 0
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		path := filepath.Join(cacheDir, entry.Name())
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		age := time.Since(info.ModTime())
+		if age > cacheTTL {
+			if err := os.Remove(path); err == nil {
+				removed++
+			}
+		}
+	}
+
+	dbgPrintf("[Cache] Cleanup complete: removed %d expired file(s)\n", removed)
+}
+
 func getCachedResponse(checksum string) (string, bool) {
+	// Start cleanup routine on first cache access
+	startCacheCleanup()
+
 	path := filepath.Join(cacheDir, checksum+".json")
 	b, err := os.ReadFile(path)
 	if err != nil {
