@@ -497,8 +497,11 @@ Rules:
 // =====================================================
 
 func checksumPayload(req AdvisorRequest) string {
+	// Normalize the request before hashing
+	normalized := normalizeRequest(req)
+
 	// Create a deterministic JSON representation by sorting keys
-	data, err := json.Marshal(req)
+	data, err := json.Marshal(normalized)
 	if err != nil {
 		return ""
 	}
@@ -514,6 +517,110 @@ func checksumPayload(req AdvisorRequest) string {
 	// Calculate SHA-256 hash
 	hash := sha256.Sum256([]byte(sortedJSON))
 	return hex.EncodeToString(hash[:])
+}
+
+// normalizeRequest trims whitespace and normalizes case for cache consistency
+func normalizeRequest(req AdvisorRequest) AdvisorRequest {
+	normalizeStr := func(s *string) *string {
+		if s == nil {
+			return nil
+		}
+		trimmed := strings.TrimSpace(*s)
+		// Collapse multiple spaces into single space
+		trimmed = strings.Join(strings.Fields(trimmed), " ")
+		if trimmed == "" {
+			return nil
+		}
+		return &trimmed
+	}
+
+	normalizeStrLower := func(s *string) *string {
+		if s == nil {
+			return nil
+		}
+		trimmed := strings.TrimSpace(strings.ToLower(*s))
+		trimmed = strings.Join(strings.Fields(trimmed), " ")
+		if trimmed == "" {
+			return nil
+		}
+		return &trimmed
+	}
+
+	normalizeSlice := func(ss []string) []string {
+		if len(ss) == 0 {
+			return nil
+		}
+		result := make([]string, 0, len(ss))
+		for _, s := range ss {
+			trimmed := strings.TrimSpace(s)
+			trimmed = strings.Join(strings.Fields(trimmed), " ")
+			if trimmed != "" {
+				result = append(result, strings.ToLower(trimmed))
+			}
+		}
+		if len(result) == 0 {
+			return nil
+		}
+		sort.Strings(result) // Sort for consistency
+		return result
+	}
+
+	return AdvisorRequest{
+		// My Stats - keep numbers as-is, just trim
+		GPA:          normalizeStr(req.GPA),
+		WeightedGPA:  normalizeStr(req.WeightedGPA),
+		TestScore:    normalizeStr(req.TestScore),
+		Coursework:   normalizeStr(req.Coursework),
+		ClassRank:    normalizeStr(req.ClassRank),
+		SchoolAmount: normalizeStr(req.SchoolAmount),
+
+		// Academics - normalize case for consistency
+		IntendedMajor:      normalizeStrLower(req.IntendedMajor),
+		TeachingStyle:      normalizeStrLower(req.TeachingStyle),
+		TeachingStyleOther: normalizeStr(req.TeachingStyleOther),
+		ClassSize:          normalizeStrLower(req.ClassSize),
+		AcceptAPIB:         normalizeStrLower(req.AcceptAPIB),
+		SchoolType:         normalizeStrLower(req.SchoolType),
+		SchoolTypeOther:    normalizeStr(req.SchoolTypeOther),
+		ActivitiesKeywords: normalizeSlice(req.ActivitiesKeywords),
+
+		// Career
+		CareerGoal:        normalizeStr(req.CareerGoal),
+		CareerFlexibility: normalizeStrLower(req.CareerFlexibility),
+		ProgramFeatures:   normalizeStr(req.ProgramFeatures),
+
+		// Finances
+		Budget:              normalizeStr(req.Budget),
+		EFC_SAI:             normalizeStr(req.EFC_SAI),
+		WillApplyAid:        normalizeStrLower(req.WillApplyAid),
+		ScholarshipInterest: normalizeStrLower(req.ScholarshipInterest),
+		MeritAidImportance:  normalizeStrLower(req.MeritAidImportance),
+
+		// Strategy & Timing
+		CurriculumFlexibility:   normalizeStrLower(req.CurriculumFlexibility),
+		OutcomesPriority:        normalizeStrLower(req.OutcomesPriority),
+		OutcomesDetails:         normalizeStr(req.OutcomesDetails),
+		AlumniNetworkImportance: normalizeStrLower(req.AlumniNetworkImportance),
+		StartYear:               normalizeStr(req.StartYear),
+
+		// Location
+		ZIPCode:          normalizeStr(req.ZIPCode),
+		DistanceFromHome: normalizeStr(req.DistanceFromHome),
+		CampusSetting:    normalizeStrLower(req.CampusSetting),
+		GeographicFeat:   normalizeSlice(req.GeographicFeat),
+		RegionKeywords:   normalizeStr(req.RegionKeywords),
+		Climate:          normalizeStrLower(req.Climate),
+		Format:           normalizeStrLower(req.Format),
+		SchoolPreference: normalizeStrLower(req.SchoolPreference),
+
+		// Campus Life
+		HousingPreference: normalizeStrLower(req.HousingPreference),
+		HousingKeywords:   normalizeSlice(req.HousingKeywords),
+
+		// Refinements - normalize college names
+		IncludeColleges: normalizeSlice(req.IncludeColleges),
+		ExcludeColleges: normalizeSlice(req.ExcludeColleges),
+	}
 }
 
 func marshalSorted(obj interface{}) string {
