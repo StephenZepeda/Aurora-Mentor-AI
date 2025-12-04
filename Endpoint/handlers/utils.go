@@ -164,9 +164,9 @@ func getPrompt(id string) (string, bool) {
 }
 
 func deletePrompt(id string) {
-	promptStore.mu.RLock()
+	promptStore.mu.Lock()
 	delete(promptStore.m, id)
-	promptStore.mu.RUnlock()
+	promptStore.mu.Unlock()
 }
 
 // ---- ID generator (24-char hex) ----
