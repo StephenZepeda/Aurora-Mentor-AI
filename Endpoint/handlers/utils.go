@@ -35,9 +35,9 @@ func errPrintf(format string, args ...any) {
 	log.Printf("[ERROR] "+format, args...)
 }
 
-func infoPrintf(format string, args ...any) {
-	log.Printf("[INFO] "+format, args...)
-}
+// func infoPrintf(format string, args ...any) {
+// 	log.Printf("[INFO] "+format, args...)
+// }
 
 // ---- Response cache with checksum ----
 

@@ -3,8 +3,8 @@
    ======================================== */
 
 const DetailsController = (() => {
-  const SCHOOL_DETAILS_ENDPOINT = "https://developertesting.xyz/CollegeAdvisorDetails";
-  const SCHOOL_DETAILS_STATUS = "https://developertesting.xyz/CollegeAdvisorDetailsStatus";
+  const SCHOOL_DETAILS_ENDPOINT = "https://aurora.developertesting.xyz/CollegeAdvisorDetails";
+  const SCHOOL_DETAILS_STATUS = "https://aurora.developertesting.xyz/CollegeAdvisorDetailsStatus";
 
   const __esc = (s) => String(s)
     .replaceAll("&", "&amp;")

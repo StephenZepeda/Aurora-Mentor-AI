@@ -2,8 +2,10 @@ package main
 
 import (
 	"backend/handlers"
+	"flag"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -22,8 +24,16 @@ func main() {
 
 	file_location := "/etc/letsencrypt/live/developertesting.xyz/"
 
-	log.Println("Serving on https://developertesting.xyz")
-	log.Fatal(http.ListenAndServeTLS(":443",
+	defaultPort := os.Getenv("PORT")
+	if defaultPort == "" {
+		defaultPort = "443"
+	}
+	port := flag.String("port", defaultPort, "port to listen on")
+	flag.Parse()
+	addr := ":" + *port
+
+	log.Printf("Serving on https://developertesting.xyz%s", addr)
+	log.Fatal(http.ListenAndServeTLS(addr,
 		file_location+"fullchain.pem",
 		file_location+"privkey.pem",
 		handler))
