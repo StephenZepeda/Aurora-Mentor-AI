@@ -19,18 +19,6 @@ import (
 	"github.com/openai/openai-go/v2/option"
 )
 
-/*
-What’s new in this version:
-- API key is loaded from JSON (default secrets/openai.json) with env fallback.
-- The initial HTTP 200 response now includes {"id": "...", "avg_chatgpt_ms": <float>, "samples": <int>}.
-- Same durable latency stats at data/chat_latency_stats.json (atomic writes, threadsafe).
-- Fully aligned with Aidvisor.html’s payload fields and the strict JSON success/error contract your JS expects.
-  (Refs: form fields & polling flow in Aidvisor.html; existing /CollegeFetch consumer.)  */
-
-// =====================================================
-//                    Secrets loader
-// =====================================================
-
 type secretFile struct {
 	OpenAIKey string `json:"openai_api_key"`
 }

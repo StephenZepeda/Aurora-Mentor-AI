@@ -3,8 +3,8 @@
    ======================================== */
 
 const APIController = (() => {
-  const HOOK_URL = "https://aurora.developertesting.xyz/CollegeAdvisor";
-  const FETCH_URL = "https://aurora.developertesting.xyz/CollegeFetch";
+  const HOOK_URL = "https://developertesting.xyz:6700/CollegeAdvisor";
+  const FETCH_URL = "https://developertesting.xyz:6700/CollegeFetch";
 
   let pollAbort = null;
   let pollTimeout = null;
