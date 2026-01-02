@@ -64,7 +64,7 @@ function initFormSubmit() {
     
     // For free users, limit to 3 schools
     if (MembershipController.isFree()) {
-      payload.school_amount = 3;
+      payload.school_amount = "3";
     }
 
     await APIController.submitForm(
@@ -115,7 +115,7 @@ function initRefineButton() {
     
     // For free users, limit to 3 schools
     if (MembershipController.isFree()) {
-      payload.school_amount = 3;
+      payload.school_amount = "3";
     }
 
     await APIController.submitForm(
