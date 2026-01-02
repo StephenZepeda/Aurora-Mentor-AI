@@ -278,6 +278,31 @@ const MembershipController = (() => {
     });
   }
 
+  // Generate random text for fake cards
+  function generateRandomText() {
+    const words = ['Stanford', 'Harvard', 'Princeton', 'Berkeley', 'Oxford', 'Cambridge', 'Yale', 'MIT', 'Caltech', 'Northwestern', 'Duke', 'Penn', 'Cornell', 'Columbia', 'Rice', 'Notre Dame', 'Carnegie Mellon', 'Dartmouth', 'Johns Hopkins', 'Emory'];
+    return words[Math.floor(Math.random() * words.length)];
+  }
+
+  function generateFakeCard(index) {
+    const name = generateRandomText();
+    const chance = Math.floor(Math.random() * 40) + 30; // 30-70% chance
+    const categories = ['Safety', 'Match', 'Reach'];
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    const distances = ['50 miles', '150 miles', '300 miles', '500 miles', '800 miles'];
+    const distance = distances[Math.floor(Math.random() * distances.length)];
+    
+    return {
+      name: name,
+      category: category,
+      chance_percent: chance,
+      distance_from_location: distance,
+      reasoning: 'Strong academic program with excellent outcomes and campus culture fit.',
+      isBlurred: true,
+      isFake: true
+    };
+  }
+
   // Render school card with blur overlay if needed
   function renderSchoolCard(school, index) {
     const isBlurred = school.isBlurred;
@@ -285,7 +310,7 @@ const MembershipController = (() => {
     const cat = (school.category || "").toLowerCase();
     const cls = cat === 'safety' ? 'safety' : cat === 'match' ? 'match' : cat === 'reach' ? 'reach' : '';
     
-    let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred}">
+    let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred}" data-is-fake="${school.isFake ? 'true' : 'false'}">
       <h3>${escapeHtml(school.name || "")}</h3>
       <div>
         ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
@@ -352,6 +377,7 @@ const MembershipController = (() => {
     getVisibleSchoolCount,
     filterSchoolsForDisplay,
     renderSchoolCard,
+    generateFakeCard,
     canViewFullDetails,
     showDetailTeaser,
     showUpgradeModal,

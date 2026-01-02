@@ -252,6 +252,14 @@ function initRefineUI() {
   if (refine) refine.style.display = "none";
 }
 
+// Hide school amount field for free users
+function initSchoolAmountVisibility() {
+  const field = document.getElementById("school-amount-field");
+  if (field && typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
+    field.style.display = "none";
+  }
+}
+
 // Expose a re-initialization hook for dynamically injected HTML
 window.AidVisorInit = function AidVisorInit() {
   try {
@@ -267,6 +275,7 @@ window.AidVisorInit = function AidVisorInit() {
     initFormSubmit();
     initRefineButton();
     initRefineUI();
+    initSchoolAmountVisibility();
 
     // Hide results on initial load
     const el = id => document.getElementById(id);

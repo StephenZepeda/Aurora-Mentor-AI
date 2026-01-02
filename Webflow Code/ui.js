@@ -113,7 +113,7 @@ const UIController = (() => {
       filteredList = MembershipController.filterSchoolsForDisplay(list);
     }
     
-    el("ai-schools").innerHTML = (filteredList || []).map((s, index) => {
+    let cardsHTML = (filteredList || []).map((s, index) => {
       // Use membership controller's render if available
       if (typeof MembershipController !== 'undefined') {
         return MembershipController.renderSchoolCard(s, index);
@@ -132,6 +132,18 @@ const UIController = (() => {
         <p>${s.reasoning || ""}</p>
       </div>`;
     }).join("");
+    
+    // Add fake cards for free users
+    if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && filteredList.length > 0) {
+      // Add 4-6 fake cards
+      const fakeCardCount = 7;
+      for (let i = 0; i < fakeCardCount; i++) {
+        const fakeSchool = MembershipController.generateFakeCard(i);
+        cardsHTML += MembershipController.renderSchoolCard(fakeSchool, filteredList.length + i);
+      }
+    }
+    
+    el("ai-schools").innerHTML = cardsHTML;
   }
 
   function renderSchools(list) {
