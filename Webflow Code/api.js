@@ -32,6 +32,16 @@ const APIController = (() => {
     if (Array.isArray(data?.schools)) return { type: 'schools', value: data.schools };
     if (data?.invalid_fields) return { type: 'invalid', value: data.invalid_fields };
 
+    // Check for actual error responses (should stop polling)
+    if (data?.error && typeof data.error === 'string') {
+      // Only treat "invalid id" or "not found" as pending (job not ready yet)
+      if (/invalid id|not found/i.test(data.error)) {
+        return { type: 'pending' };
+      }
+      // All other errors are final - stop polling
+      return { type: 'error', value: data.error };
+    }
+
     const succ = data?.success;
     if (typeof succ === 'string') {
       const trimmed = succ.trim();
@@ -40,6 +50,7 @@ const APIController = (() => {
         if (parsed) {
           if (Array.isArray(parsed?.schools)) return { type: 'schools', value: parsed.schools };
           if (parsed?.invalid_fields) return { type: 'invalid', value: parsed.invalid_fields };
+          if (parsed?.error) return { type: 'error', value: parsed.error };
         }
       }
       return { type: 'pending' };
@@ -47,6 +58,7 @@ const APIController = (() => {
     if (succ && typeof succ === 'object') {
       if (Array.isArray(succ?.schools)) return { type: 'schools', value: succ.schools };
       if (succ?.invalid_fields) return { type: 'invalid', value: succ.invalid_fields };
+      if (succ?.error) return { type: 'error', value: succ.error };
       return { type: 'pending' };
     }
 
@@ -55,11 +67,8 @@ const APIController = (() => {
       if (parsed) {
         if (Array.isArray(parsed?.schools)) return { type: 'schools', value: parsed.schools };
         if (parsed?.invalid_fields) return { type: 'invalid', value: parsed.invalid_fields };
+        if (parsed?.error) return { type: 'error', value: parsed.error };
       }
-    }
-
-    if (typeof data?.error === 'string' && /invalid id|not found/i.test(data.error)) {
-      return { type: 'pending' };
     }
 
     return null;
@@ -85,6 +94,7 @@ const APIController = (() => {
         const x = extractSchoolsFromAny(data);
         if (x?.type === 'schools') return onSchools(x.value);
         if (x?.type === 'invalid') return onError("Invalid fields: " + JSON.stringify(x.value));
+        if (x?.type === 'error') return onError(x.value || "An error occurred during processing.");
       } catch (e) {
         if (signal.aborted || token !== activePollToken || hasFinalResult) return;
       }
@@ -129,6 +139,7 @@ const APIController = (() => {
       const direct = extractSchoolsFromAny(data);
       if (direct?.type === 'schools') return onSchools(direct.value);
       if (direct?.type === 'invalid') return onError("Invalid fields: " + JSON.stringify(direct.value));
+      if (direct?.type === 'error') return onError(direct.value || "An error occurred during processing.");
 
       const id = ["id", "job_id", "request_id"].map(k => data?.[k]).find(Boolean);
       if (id) {
