@@ -273,7 +273,8 @@ Guidelines:
 
 	if err != nil {
 		errPrintf("[SchoolDetails_ChatGpt] (ID)[%s] ✗ OpenAI API error: %v\n", id, err)
-		savePrompt(id, `{"error":"`+escapeJSON(err.Error())+`"}`)
+		userMsg := sanitizeOpenAIError(err)
+		savePrompt(id, `{"error":"`+escapeJSON(userMsg)+`"}`)
 		return
 	}
 	dbgPrintf("[SchoolDetails_ChatGpt] (ID)[%s] ✓ API call successful\n", id)

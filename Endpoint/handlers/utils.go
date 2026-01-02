@@ -268,7 +268,7 @@ func getAPIKey() (string, error) {
 		}
 		env := strings.TrimSpace(os.Getenv("OPENAI_API_KEY"))
 		if env == "" {
-			secretErr = errors.New("no OpenAI API key found in secrets file or OPENAI_API_KEY")
+			secretErr = errors.New("Backend Key Issue.")
 			return
 		}
 		secretVal = secretFile{OpenAIKey: env}
@@ -277,6 +277,44 @@ func getAPIKey() (string, error) {
 		return "", secretErr
 	}
 	return secretVal.OpenAIKey, nil
+}
+
+// sanitizeOpenAIError returns a user-friendly error message
+// without exposing sensitive API details or quota issues
+func sanitizeOpenAIError(err error) string {
+	if err == nil {
+		return "An unexpected error occurred. Please try again."
+	}
+
+	errStr := err.Error()
+
+	// Check for quota/billing errors
+	if strings.Contains(errStr, "insufficient_quota") ||
+		strings.Contains(errStr, "exceeded your current quota") ||
+		strings.Contains(errStr, "billing") {
+		return "Service temporarily unavailable. Please try again in a few moments."
+	}
+
+	// Check for rate limiting
+	if strings.Contains(errStr, "rate_limit") ||
+		strings.Contains(errStr, "Too Many Requests") {
+		return "High traffic detected. Please wait a moment and try again."
+	}
+
+	// Check for invalid API key
+	if strings.Contains(errStr, "invalid_api_key") ||
+		strings.Contains(errStr, "Incorrect API key") {
+		return "Service configuration error. Please contact support."
+	}
+
+	// Check for timeout
+	if strings.Contains(errStr, "timeout") ||
+		strings.Contains(errStr, "deadline exceeded") {
+		return "Request timed out. Please try again."
+	}
+
+	// Generic fallback - don't expose raw error
+	return "Unable to process your request at this time. Please try again later."
 }
 
 type latencyStats struct {

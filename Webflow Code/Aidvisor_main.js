@@ -61,6 +61,11 @@ function initFormSubmit() {
     UIController.clearInvalidHighlights();
 
     const payload = FormController.buildPayload();
+    
+    // For free users, limit to 3 schools
+    if (MembershipController.isFree()) {
+      payload.school_amount = 3;
+    }
 
     await APIController.submitForm(
       payload,
@@ -107,6 +112,11 @@ function initRefineButton() {
     window.__merge_with_previous_on_next_render__ = true;
 
     const payload = FormController.buildPayload();
+    
+    // For free users, limit to 3 schools
+    if (MembershipController.isFree()) {
+      payload.school_amount = 3;
+    }
 
     await APIController.submitForm(
       payload,

@@ -224,7 +224,8 @@ func Aidvisor_ChatGpt(prompt string, id string, checksum string) {
 
 	if err != nil {
 		errPrintf("[Aidvisor_ChatGpt] (ID)[%s] ✗ OpenAI API error: %v\n", id, err)
-		savePrompt(id, `{"error":"`+escapeJSON(err.Error())+`"}`)
+		userMsg := sanitizeOpenAIError(err)
+		savePrompt(id, `{"error":"`+escapeJSON(userMsg)+`"}`)
 		return
 	}
 
