@@ -394,11 +394,13 @@
   z-index: 20;
   border-radius: 8px;
   pointer-events: none;
+  filter: blur(0) !important;
 }
 
 .ai-paywall-lock {
   font-size: 48px;
   margin-bottom: 8px;
+  filter: blur(0) !important;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
@@ -410,6 +412,7 @@
   background: rgba(0, 0, 0, 0.7);
   padding: 6px 12px;
   border-radius: 4px;
+  filter: blur(0) !important;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
 }
 
@@ -1111,3 +1114,5 @@
 .ai-card-result.is-open:hover {
   transform: translateY(-2px);
 }
+
+
