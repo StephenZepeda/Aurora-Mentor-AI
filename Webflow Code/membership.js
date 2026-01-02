@@ -320,15 +320,10 @@ const MembershipController = (() => {
       <p>${escapeHtml(school.reasoning || "")}</p>`;
     
     if (isBlurred) {
-      cardHTML += `<div class="ai-blur-banner" style="
-        margin-top: 12px;
-        padding: 10px;
-        background: rgba(0,0,0,0.05);
-        border-radius: 4px;
-        text-align: center;
-        font-size: 12px;
-        color: #666;
-      ">🔒 Upgrade to Pro to see more schools</div>`;
+      cardHTML += `<div class="ai-paywall-overlay">
+        <div class="ai-paywall-lock">🔒</div>
+        <div class="ai-paywall-text">Upgrade to Pro</div>
+      </div>`;
     }
     
     cardHTML += `</div>`;
