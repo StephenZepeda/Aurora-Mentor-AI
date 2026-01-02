@@ -363,10 +363,14 @@
 }
 
 /* Blur cards after the first 3 and fake cards */
+
 .ai-card-result.ai-blurred {
+  pointer-events: none;
+}
+
+.ai-card-result.ai-blurred .ai-card-content {
   filter: blur(5px);
   opacity: 0.6;
-  pointer-events: none;
 }
 
 .ai-card-result.ai-blurred::before {

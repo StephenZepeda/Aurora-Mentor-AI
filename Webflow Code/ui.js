@@ -123,19 +123,20 @@ const UIController = (() => {
       const cat = (s.category || "").toLowerCase();
       const cls = cat === 'safety' ? 'safety' : cat === 'match' ? 'match' : cat === 'reach' ? 'reach' : '';
       return `<div class="ai-card-result">
-        <h3>${s.name || ""}</h3>
-        <div>
-          ${s.category ? `<span class="ai-pill ${cls}">${s.category}</span>` : ""}
-          ${s.chance_percent != null ? `<span class="ai-pill">${s.chance_percent}% chance</span>` : ""}
-          ${s.distance_from_location ? `<span class="ai-pill">${s.distance_from_location}</span>` : ""}
+        <div class="ai-card-content">
+          <h3>${s.name || ""}</h3>
+          <div>
+            ${s.category ? `<span class="ai-pill ${cls}">${s.category}</span>` : ""}
+            ${s.chance_percent != null ? `<span class="ai-pill">${s.chance_percent}% chance</span>` : ""}
+            ${s.distance_from_location ? `<span class="ai-pill">${s.distance_from_location}</span>` : ""}
+          </div>
+          <p>${s.reasoning || ""}</p>
         </div>
-        <p>${s.reasoning || ""}</p>
       </div>`;
     }).join("");
     
     // Add fake cards for free users
     if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && filteredList.length > 0) {
-      // Add 4-6 fake cards
       const fakeCardCount = 7;
       for (let i = 0; i < fakeCardCount; i++) {
         const fakeSchool = MembershipController.generateFakeCard(i);

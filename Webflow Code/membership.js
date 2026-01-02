@@ -311,13 +311,15 @@ const MembershipController = (() => {
     const cls = cat === 'safety' ? 'safety' : cat === 'match' ? 'match' : cat === 'reach' ? 'reach' : '';
     
     let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred}" data-is-fake="${school.isFake ? 'true' : 'false'}">
-      <h3>${escapeHtml(school.name || "")}</h3>
-      <div>
-        ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
-        ${school.chance_percent != null ? `<span class="ai-pill">${school.chance_percent}% chance</span>` : ""}
-        ${school.distance_from_location ? `<span class="ai-pill">${escapeHtml(school.distance_from_location)}</span>` : ""}
-      </div>
-      <p>${escapeHtml(school.reasoning || "")}</p>`;
+      <div class="ai-card-content">
+        <h3>${escapeHtml(school.name || "")}</h3>
+        <div>
+          ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
+          ${school.chance_percent != null ? `<span class="ai-pill">${school.chance_percent}% chance</span>` : ""}
+          ${school.distance_from_location ? `<span class="ai-pill">${escapeHtml(school.distance_from_location)}</span>` : ""}
+        </div>
+        <p>${escapeHtml(school.reasoning || "")}</p>
+      </div>`;
     
     if (isBlurred) {
       cardHTML += `<div class="ai-paywall-overlay">
