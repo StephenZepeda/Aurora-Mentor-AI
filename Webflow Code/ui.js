@@ -135,7 +135,6 @@ const UIController = (() => {
       </div>`;
     }).join("");
     
-    // Add fake cards for free users
     if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && filteredList.length > 0) {
       const fakeCardCount = 7;
       for (let i = 0; i < fakeCardCount; i++) {
@@ -143,7 +142,6 @@ const UIController = (() => {
         cardsHTML += MembershipController.renderSchoolCard(fakeSchool, filteredList.length + i);
       }
     }
-    
     el("ai-schools").innerHTML = cardsHTML;
   }
 

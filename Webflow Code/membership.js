@@ -365,6 +365,15 @@ const MembershipController = (() => {
     });
   }
 
+  // Handle paywall overlay clicks
+  function initPaywallClicks() {
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.ai-paywall-overlay')) {
+        window.location.href = '/plans';
+      }
+    });
+  }
+
   // Public API
   return {
     init,
@@ -378,7 +387,8 @@ const MembershipController = (() => {
     canViewFullDetails,
     showDetailTeaser,
     showUpgradeModal,
-    initDetailTeaser
+    initDetailTeaser,
+    initPaywallClicks
   };
 })();
 
@@ -387,8 +397,10 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     MembershipController.init();
     MembershipController.initDetailTeaser();
+    MembershipController.initPaywallClicks();
   });
 } else {
   MembershipController.init();
   MembershipController.initDetailTeaser();
+  MembershipController.initPaywallClicks();
 }

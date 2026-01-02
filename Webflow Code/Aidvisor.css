@@ -397,8 +397,14 @@
   justify-content: center;
   z-index: 20;
   border-radius: 8px;
-  pointer-events: none;
+  pointer-events: auto;
   filter: blur(0) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-paywall-overlay:hover {
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .ai-paywall-lock {
