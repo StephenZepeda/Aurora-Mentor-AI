@@ -106,7 +106,20 @@ const UIController = (() => {
   // ========== Schools Display ==========
   function drawSchools(list) {
     if (!el("ai-schools")) return;
-    el("ai-schools").innerHTML = (list || []).map(s => {
+    
+    // Apply membership filtering
+    let filteredList = list;
+    if (typeof MembershipController !== 'undefined') {
+      filteredList = MembershipController.filterSchoolsForDisplay(list);
+    }
+    
+    el("ai-schools").innerHTML = (filteredList || []).map((s, index) => {
+      // Use membership controller's render if available
+      if (typeof MembershipController !== 'undefined') {
+        return MembershipController.renderSchoolCard(s, index);
+      }
+      
+      // Fallback to original rendering
       const cat = (s.category || "").toLowerCase();
       const cls = cat === 'safety' ? 'safety' : cat === 'match' ? 'match' : cat === 'reach' ? 'reach' : '';
       return `<div class="ai-card-result">

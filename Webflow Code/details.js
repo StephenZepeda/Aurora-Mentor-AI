@@ -54,6 +54,19 @@ const DetailsController = (() => {
   function openSchoolDetailInline(panel, schoolName) {
     if (!panel?.isConnected) return;
 
+    // Check if user can view full details
+    const isFreeUser = typeof MembershipController !== 'undefined' && MembershipController.isFree();
+    
+    // Show teaser for free users
+    if (isFreeUser) {
+      panel.innerHTML = `
+        <div class="ai-card">
+          ${typeof MembershipController !== 'undefined' ? MembershipController.showDetailTeaser(schoolName) : ''}
+        </div>`;
+      return;
+    }
+
+    // Pro users: fetch full details
     panel.innerHTML = `
       <div class="ai-card">
         <h2>${__esc(schoolName)}</h2>
