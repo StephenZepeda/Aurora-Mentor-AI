@@ -5,7 +5,7 @@
 
 const MembershipController = (() => {
   // Memberstack integration
-  const MAX_FREE_SCHOOLS = 5; // Preview schools for free users (3-5 range)
+  const MAX_FREE_SCHOOLS = 3; // Preview schools for free users
   const MAX_PRO_SCHOOLS = 30; // Full list for pro users
   const MAX_FREE_RERUNS = 1; // Free users get one re-run
   const FREE_BANNER_ID = 'ai-free-plan-banner';
@@ -97,12 +97,14 @@ const MembershipController = (() => {
         background: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%);
         border: 2px solid rgba(255, 255, 255, 0.2);
         border-radius: 16px;
-        padding: 40px 32px;
+        padding: 32px;
         margin: 24px 0;
-        text-align: center;
         box-shadow: 0 10px 40px rgba(91, 33, 182, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
         position: relative;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 32px;
       }
 
       .ai-upgrade-prompt-card::before {
@@ -116,8 +118,8 @@ const MembershipController = (() => {
       }
 
       .ai-upgrade-prompt-icon {
-        font-size: 56px;
-        margin-bottom: 20px;
+        font-size: 64px;
+        flex-shrink: 0;
         filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
         animation: pulse-lock 2s ease-in-out infinite;
       }
@@ -127,9 +129,14 @@ const MembershipController = (() => {
         50% { transform: scale(1.05); }
       }
 
+      .ai-upgrade-prompt-content {
+        flex: 1;
+        text-align: left;
+      }
+
       .ai-upgrade-prompt-card h3 {
-        margin: 0 0 16px 0;
-        font-size: 28px;
+        margin: 0 0 10px 0;
+        font-size: 26px;
         font-weight: 800;
         color: #ffffff;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -137,35 +144,31 @@ const MembershipController = (() => {
       }
 
       .ai-upgrade-prompt-card > p {
-        margin: 0 0 28px 0;
+        margin: 0 0 16px 0;
         color: rgba(255, 255, 255, 0.95);
-        font-size: 16px;
-        line-height: 1.6;
-        max-width: 520px;
-        margin-left: auto;
-        margin-right: auto;
+        font-size: 15px;
+        line-height: 1.5;
       }
 
       .ai-upgrade-features {
         list-style: none;
-        padding: 24px;
-        margin: 0 0 28px 0;
-        text-align: left;
-        max-width: 520px;
-        margin-left: auto;
-        margin-right: auto;
+        padding: 16px 20px;
+        margin: 0 0 16px 0;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
+        border-radius: 10px;
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.15);
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 16px;
       }
 
       .ai-upgrade-features li {
-        margin: 12px 0;
+        margin: 0;
         color: #ffffff;
-        font-size: 15px;
-        padding-left: 8px;
-        line-height: 1.5;
+        font-size: 14px;
+        padding-left: 4px;
+        line-height: 1.4;
         font-weight: 500;
       }
 
@@ -181,14 +184,15 @@ const MembershipController = (() => {
         background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
         color: #1e293b !important;
         border: none !important;
-        padding: 14px 32px !important;
-        font-size: 16px !important;
+        padding: 12px 28px !important;
+        font-size: 15px !important;
         font-weight: 800 !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         box-shadow: 0 8px 24px rgba(251, 191, 36, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
         transition: all 0.2s ease !important;
         cursor: pointer !important;
         text-transform: none !important;
+        white-space: nowrap !important;
       }
 
       .ai-upgrade-from-results:hover {
@@ -198,6 +202,27 @@ const MembershipController = (() => {
 
       .ai-upgrade-from-results:active {
         transform: translateY(0) !important;
+      }
+
+      @media (max-width: 768px) {
+        .ai-upgrade-prompt-card {
+          flex-direction: column;
+          text-align: center;
+          gap: 20px;
+          padding: 28px 24px;
+        }
+
+        .ai-upgrade-prompt-content {
+          text-align: center;
+        }
+
+        .ai-upgrade-features {
+          grid-template-columns: 1fr;
+        }
+
+        .ai-upgrade-from-results {
+          width: 100% !important;
+        }
       }
 
       .ai-rerun-limit-notice {
@@ -264,7 +289,7 @@ const MembershipController = (() => {
     banner.className = 'ai-free-banner';
     banner.innerHTML = `
       <div class="ai-free-banner__label">Free Plan</div>
-      <div class="ai-free-banner__text">You're on the Free plan. Upgrade to Pro to unlock all matched schools and full details.</div>
+      <div class="ai-free-banner__text">You're on the Free plan with 3 preview schools. Upgrade to Pro to unlock all matched schools and full details.</div>
       <button class="ai-banner-upgrade-btn" id="ai-banner-upgrade">Upgrade to Pro</button>
     `;
 
@@ -551,19 +576,21 @@ const MembershipController = (() => {
     return `
       <div class="ai-upgrade-prompt-card">
         <div class="ai-upgrade-prompt-icon">🔒</div>
-        <h3>Unlock ${remainingCount}+ More Schools</h3>
-        <p>You're seeing ${MAX_FREE_SCHOOLS} preview schools. Upgrade to Pro to see your full personalized list.</p>
-        <ul class="ai-upgrade-features">
-          <li>Full school list (15-30 matches)</li>
-          <li>Reach / Target / Safety labels</li>
-          <li>Acceptance likelihood for each school</li>
-          <li>Financial fit analysis & net cost estimates</li>
-          <li>Detailed match reasoning (academics, major, lifestyle)</li>
-          <li>Application strategy recommendations</li>
-          <li>School comparison tools</li>
-          <li>Unlimited re-runs with different inputs</li>
-        </ul>
-        <button class="ai-btn ai-primary ai-upgrade-from-results">Upgrade to Pro</button>
+        <div class="ai-upgrade-prompt-content">
+          <h3>Unlock 7+ More Schools</h3>
+          <p>You're seeing 3 preview schools. Upgrade to Pro to see your full personalized list.</p>
+          <ul class="ai-upgrade-features">
+            <li>Full school list (15-30 matches)</li>
+            <li>Reach / Target / Safety labels</li>
+            <li>Acceptance likelihood for each school</li>
+            <li>Financial fit analysis & net cost</li>
+            <li>Detailed match reasoning</li>
+            <li>Application strategy recommendations</li>
+            <li>School comparison tools</li>
+            <li>Unlimited re-runs with different inputs</li>
+          </ul>
+          <button class="ai-btn ai-primary ai-upgrade-from-results">Upgrade to Pro</button>
+        </div>
       </div>
     `;
   }
