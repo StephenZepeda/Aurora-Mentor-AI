@@ -135,14 +135,22 @@ const UIController = (() => {
       </div>`;
     }).join("");
     
-    if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && filteredList.length > 0) {
-      const fakeCardCount = 7;
-      for (let i = 0; i < fakeCardCount; i++) {
-        const fakeSchool = MembershipController.generateFakeCard(i);
-        cardsHTML += MembershipController.renderSchoolCard(fakeSchool, filteredList.length + i);
-      }
+    // Add upgrade prompt for free users
+    if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && list.length > filteredList.length) {
+      const remainingCount = list.length - filteredList.length;
+      cardsHTML += MembershipController.generateUpgradePromptCard(remainingCount);
     }
+    
     el("ai-schools").innerHTML = cardsHTML;
+    
+    // Bind upgrade button clicks
+    document.querySelectorAll('.ai-upgrade-from-results').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (typeof MembershipController !== 'undefined') {
+          MembershipController.showUpgradeModal('your full personalized school list');
+        }
+      });
+    });
   }
 
   function renderSchools(list) {

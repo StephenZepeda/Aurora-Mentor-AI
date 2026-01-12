@@ -5,19 +5,23 @@
 
 const MembershipController = (() => {
   // Memberstack integration
-  const MAX_FREE_SCHOOLS = 3;
-  const MAX_VISIBLE_SCHOOLS = 10; // For filtering display
+  const MAX_FREE_SCHOOLS = 5; // Preview schools for free users (3-5 range)
+  const MAX_PRO_SCHOOLS = 30; // Full list for pro users
+  const MAX_FREE_RERUNS = 1; // Free users get one re-run
   const FREE_BANNER_ID = 'ai-free-plan-banner';
   const BASE_STYLE_ID = 'ai-membership-base-styles';
+  const RERUN_COUNT_KEY = 'ai_rerun_count';
 
   let userPlan = null;
   let memberEmail = null;
+  let rerunCount = 0;
 
   // Initialize Memberstack integration
   function init() {
     ensureBaseStyles();
     // Check for Memberstack on page load
     detectMembershipTier();
+    loadRerunCount();
     renderFreePlanBanner();
   }
 
@@ -88,6 +92,63 @@ const MembershipController = (() => {
           width: 100%;
         }
       }
+
+      .ai-upgrade-prompt-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        border: 2px solid #6366f1;
+        border-radius: 16px;
+        padding: 32px;
+        margin: 24px 0;
+        text-align: center;
+      }
+
+      .ai-upgrade-prompt-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .ai-upgrade-prompt-card h3 {
+        margin: 0 0 12px 0;
+        font-size: 24px;
+        color: #1e293b;
+      }
+
+      .ai-upgrade-prompt-card > p {
+        margin: 0 0 20px 0;
+        color: #475569;
+        font-size: 16px;
+      }
+
+      .ai-upgrade-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+        text-align: left;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .ai-upgrade-features li {
+        margin: 10px 0;
+        color: #334155;
+        font-size: 15px;
+        padding-left: 4px;
+      }
+
+      .ai-rerun-limit-notice {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 12px 0;
+        color: #856404;
+        font-size: 14px;
+      }
+
+      .ai-rerun-limit-notice strong {
+        color: #664d03;
+      }
     `;
 
     document.head.appendChild(style);
@@ -154,9 +215,47 @@ const MembershipController = (() => {
     });
   }
 
+  // Re-run tracking
+  function loadRerunCount() {
+    try {
+      const stored = localStorage.getItem(RERUN_COUNT_KEY);
+      rerunCount = stored ? parseInt(stored, 10) : 0;
+    } catch (e) {
+      rerunCount = 0;
+    }
+  }
+
+  function incrementRerunCount() {
+    rerunCount++;
+    try {
+      localStorage.setItem(RERUN_COUNT_KEY, String(rerunCount));
+    } catch (e) {
+      console.warn('[Membership] Could not save rerun count:', e);
+    }
+  }
+
+  function canRerun() {
+    if (isPro()) return true;
+    return rerunCount < MAX_FREE_RERUNS;
+  }
+
+  function getRemainingReruns() {
+    if (isPro()) return Infinity;
+    return Math.max(0, MAX_FREE_RERUNS - rerunCount);
+  }
+
+  function resetRerunCount() {
+    rerunCount = 0;
+    try {
+      localStorage.removeItem(RERUN_COUNT_KEY);
+    } catch (e) {
+      console.warn('[Membership] Could not reset rerun count:', e);
+    }
+  }
+
   // Get number of visible schools for this user
   function getVisibleSchoolCount() {
-    return isPro() ? MAX_VISIBLE_SCHOOLS : MAX_FREE_SCHOOLS;
+    return isPro() ? MAX_PRO_SCHOOLS : MAX_FREE_SCHOOLS;
   }
 
   // Filter schools based on membership tier
@@ -164,14 +263,14 @@ const MembershipController = (() => {
     if (!Array.isArray(schools)) return [];
     
     if (isPro()) {
-      return schools; // Pro users see all schools
+      return schools; // Pro users see all schools with full details
     }
     
-    // Free users: mark schools beyond limit as blurred
-    return schools.map((school, index) => ({
+    // Free users: only show preview (3-5 schools)
+    return schools.slice(0, MAX_FREE_SCHOOLS).map((school) => ({
       ...school,
-      isBlurred: index >= MAX_FREE_SCHOOLS,
-      blurReason: index >= MAX_FREE_SCHOOLS ? 'free_limit' : null
+      isPreview: true,
+      hiddenDetails: true // Hide reach/target/safety, acceptance %, financial fit
     }));
   }
 
@@ -378,50 +477,58 @@ const MembershipController = (() => {
         window.MemberStack.openCheckout({ plan: 'pro' });
       } else {
         // Fallback URL if Memberstack not available
-        window.location.href = '/pricing';
+        window.location.href = '/plans';
       }
     });
   }
 
-  // Generate random text for fake cards
-  function generateRandomText() {
-    const words = ['Stanford', 'Harvard', 'Princeton', 'Berkeley', 'Oxford', 'Cambridge', 'Yale', 'MIT', 'Caltech', 'Northwestern', 'Duke', 'Penn', 'Cornell', 'Columbia', 'Rice', 'Notre Dame', 'Carnegie Mellon', 'Dartmouth', 'Johns Hopkins', 'Emory'];
-    return words[Math.floor(Math.random() * words.length)];
+  // Generate upgrade prompt card for remaining schools
+  function generateUpgradePromptCard(remainingCount) {
+    return `
+      <div class="ai-upgrade-prompt-card">
+        <div class="ai-upgrade-prompt-icon">🔒</div>
+        <h3>Unlock ${remainingCount}+ More Schools</h3>
+        <p>You're seeing ${MAX_FREE_SCHOOLS} preview schools. Upgrade to Pro to see your full personalized list with:</p>
+        <ul class="ai-upgrade-features">
+          <li>✓ Full school list (15-30 matches)</li>
+          <li>✓ Reach / Target / Safety labels</li>
+          <li>✓ Acceptance likelihood for each school</li>
+          <li>✓ Financial fit analysis & net cost estimates</li>
+          <li>✓ Detailed match reasoning (academics, major, lifestyle)</li>
+          <li>✓ Application strategy recommendations</li>
+          <li>✓ School comparison tools</li>
+          <li>✓ Unlimited re-runs with different inputs</li>
+        </ul>
+        <button class="ai-btn ai-primary ai-upgrade-from-results" style="margin-top: 16px;">Upgrade to Pro</button>
+      </div>
+    `;
   }
 
-  function generateFakeCard(index) {
-    const name = generateRandomText();
-    const chance = Math.floor(Math.random() * 40) + 30; // 30-70% chance
-    const categories = ['Safety', 'Match', 'Reach'];
-    const category = categories[Math.floor(Math.random() * categories.length)];
-    const distances = ['50 miles', '150 miles', '300 miles', '500 miles', '800 miles'];
-    const distance = distances[Math.floor(Math.random() * distances.length)];
-    
-    return {
-      name: name,
-      category: category,
-      chance_percent: chance,
-      distance_from_location: distance,
-      reasoning: 'Strong academic program with excellent outcomes and campus culture fit.',
-      isBlurred: true,
-      isFake: true
-    };
-  }
-
-  // Render school card with blur overlay if needed
+  // Render school card with gating for free users
   function renderSchoolCard(school, index) {
     const isBlurred = school.isBlurred;
+    const isPreview = school.isPreview;
+    const hiddenDetails = school.hiddenDetails;
     const blurClass = isBlurred ? 'ai-blurred' : '';
     const cat = (school.category || "").toLowerCase();
     const cls = cat === 'safety' ? 'safety' : cat === 'match' ? 'match' : cat === 'reach' ? 'reach' : '';
     
-    let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred}" data-is-fake="${school.isFake ? 'true' : 'false'}">
+    let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred}" data-is-fake="${school.isFake ? 'true' : 'false'}" data-is-preview="${isPreview ? 'true' : 'false'}">
       <div class="ai-card-content">
         <h3>${escapeHtml(school.name || "")}</h3>
-        <div>
+        <div>`;
+    
+    // Free users: hide reach/target/safety and acceptance %
+    if (hiddenDetails && !isPro()) {
+      cardHTML += `${school.distance_from_location ? `<span class="ai-pill">${escapeHtml(school.distance_from_location)}</span>` : ""}`;
+    } else {
+      cardHTML += `
           ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
           ${school.chance_percent != null ? `<span class="ai-pill">${school.chance_percent}% chance</span>` : ""}
-          ${school.distance_from_location ? `<span class="ai-pill">${escapeHtml(school.distance_from_location)}</span>` : ""}
+          ${school.distance_from_location ? `<span class="ai-pill">${escapeHtml(school.distance_from_location)}</span>` : ""}`;
+    }
+    
+    cardHTML += `
         </div>
         <p>${escapeHtml(school.reasoning || "")}</p>
       </div>`;
@@ -488,13 +595,18 @@ const MembershipController = (() => {
     getVisibleSchoolCount,
     filterSchoolsForDisplay,
     renderSchoolCard,
-    generateFakeCard,
+    generateUpgradePromptCard,
     canViewFullDetails,
     showDetailTeaser,
     showUpgradeModal,
     renderFreePlanBanner,
     initDetailTeaser,
-    initPaywallClicks
+    initPaywallClicks,
+    // Re-run tracking
+    canRerun,
+    incrementRerunCount,
+    getRemainingReruns,
+    resetRerunCount
   };
 })();
 

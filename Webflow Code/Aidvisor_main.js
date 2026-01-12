@@ -62,10 +62,9 @@ function initFormSubmit() {
 
     const payload = FormController.buildPayload();
     
-    // For free users, limit to 3 schools
-    if (MembershipController.isFree()) {
-      payload.school_amount = "3";
-    }
+    // For free users, limit to preview schools (backend will handle full list)
+    // We don't restrict school_amount here - backend returns full list
+    // Frontend filters to preview
 
     await APIController.submitForm(
       payload,
@@ -100,6 +99,12 @@ function initRefineButton() {
   refineBtn?.addEventListener("click", async () => {
     if (submitBtn?.disabled) return;
 
+    // Check re-run limit for free users
+    if (typeof MembershipController !== 'undefined' && !MembershipController.canRerun()) {
+      MembershipController.showUpgradeModal('unlimited re-runs and refinements');
+      return;
+    }
+
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Processing…";
@@ -113,9 +118,9 @@ function initRefineButton() {
 
     const payload = FormController.buildPayload();
     
-    // For free users, limit to 3 schools
-    if (MembershipController.isFree()) {
-      payload.school_amount = "3";
+    // Increment re-run count for free users
+    if (typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
+      MembershipController.incrementRerunCount();
     }
 
     await APIController.submitForm(
@@ -126,6 +131,11 @@ function initRefineButton() {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'Get My Matches';
+        }
+        
+        // Show re-run limit notice if free user has used their limit
+        if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && !MembershipController.canRerun()) {
+          showRerunLimitNotice();
         }
       },
       (error) => {
@@ -141,6 +151,25 @@ function initRefineButton() {
       }
     );
   });
+}
+
+// Show re-run limit notice
+function showRerunLimitNotice() {
+  const refineSection = document.getElementById('ai-refine');
+  if (!refineSection) return;
+  
+  const existingNotice = refineSection.querySelector('.ai-rerun-limit-notice');
+  if (existingNotice) return; // Already showing
+  
+  const notice = document.createElement('div');
+  notice.className = 'ai-rerun-limit-notice';
+  notice.innerHTML = `
+    <strong>Re-run Limit Reached</strong><br>
+    You've used your free re-run. Upgrade to Pro for unlimited re-runs with different filters and inputs.
+    <button class="ai-btn ai-primary" style="margin-top: 8px; padding: 8px 16px; font-size: 13px;" onclick="MembershipController.showUpgradeModal('unlimited re-runs')">Upgrade Now</button>
+  `;
+  
+  refineSection.insertBefore(notice, refineSection.firstChild);
 }
 
 // Custom select enhancer
