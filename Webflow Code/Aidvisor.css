@@ -94,16 +94,18 @@
 /* Wizard header */
 .ai-steps {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
+  justify-content: center;
+  align-items: center;
 }
 
 .ai-step-dot {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 7px 12px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.7);
@@ -113,6 +115,7 @@
   transition: all 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  white-space: nowrap;
 }
 
 .ai-step-dot.active {
