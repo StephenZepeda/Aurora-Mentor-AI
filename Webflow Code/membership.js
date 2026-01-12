@@ -27,16 +27,7 @@ const MembershipController = (() => {
     const style = document.createElement('style');
     style.id = BASE_STYLE_ID;
     style.textContent = `
-      body.ai-has-free-banner {
-        padding-top: 72px;
-      }
-
       .ai-free-banner {
-        position: fixed;
-        top: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: min(1080px, calc(100% - 24px));
         display: grid;
         grid-template-columns: auto 1fr auto;
         align-items: center;
@@ -46,7 +37,7 @@ const MembershipController = (() => {
         color: #fff;
         border-radius: 14px;
         box-shadow: 0 18px 40px rgba(0,0,0,0.2);
-        z-index: 9000;
+        margin-bottom: 16px;
       }
 
       .ai-free-banner__label {
@@ -137,12 +128,12 @@ const MembershipController = (() => {
   function renderFreePlanBanner() {
     if (!isFree()) {
       document.getElementById(FREE_BANNER_ID)?.remove();
-      document.body.classList.remove('ai-has-free-banner');
       return;
     }
 
     if (document.getElementById(FREE_BANNER_ID)) return;
 
+    const host = document.getElementById('main-ai-wrap') || document.querySelector('.ai-wrap') || document.body;
     const banner = document.createElement('div');
     banner.id = FREE_BANNER_ID;
     banner.className = 'ai-free-banner';
@@ -152,8 +143,11 @@ const MembershipController = (() => {
       <button class="ai-banner-upgrade-btn" id="ai-banner-upgrade">Upgrade to Pro</button>
     `;
 
-    document.body.classList.add('ai-has-free-banner');
-    document.body.appendChild(banner);
+    if (host.firstChild) {
+      host.insertBefore(banner, host.firstChild);
+    } else {
+      host.appendChild(banner);
+    }
 
     document.getElementById('ai-banner-upgrade')?.addEventListener('click', () => {
       showUpgradeModal('all matched schools and full details');
