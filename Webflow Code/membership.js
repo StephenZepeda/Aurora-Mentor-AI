@@ -105,6 +105,7 @@ const MembershipController = (() => {
         display: flex;
         align-items: center;
         gap: 32px;
+        grid-column: 1 / -1;
       }
 
       .ai-upgrade-prompt-card::before {
