@@ -7,14 +7,99 @@ const MembershipController = (() => {
   // Memberstack integration
   const MAX_FREE_SCHOOLS = 3;
   const MAX_VISIBLE_SCHOOLS = 10; // For filtering display
+  const FREE_BANNER_ID = 'ai-free-plan-banner';
+  const BASE_STYLE_ID = 'ai-membership-base-styles';
 
   let userPlan = null;
   let memberEmail = null;
 
   // Initialize Memberstack integration
   function init() {
+    ensureBaseStyles();
     // Check for Memberstack on page load
     detectMembershipTier();
+    renderFreePlanBanner();
+  }
+
+  function ensureBaseStyles() {
+    if (document.getElementById(BASE_STYLE_ID)) return;
+
+    const style = document.createElement('style');
+    style.id = BASE_STYLE_ID;
+    style.textContent = `
+      body.ai-has-free-banner {
+        padding-top: 72px;
+      }
+
+      .ai-free-banner {
+        position: fixed;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(1080px, calc(100% - 24px));
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: linear-gradient(120deg, #0f172a, #1d4ed8);
+        color: #fff;
+        border-radius: 14px;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+        z-index: 9000;
+      }
+
+      .ai-free-banner__label {
+        padding: 6px 10px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 8px;
+        font-size: 12px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .ai-free-banner__text {
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .ai-banner-upgrade-btn {
+        background: #fbbf24;
+        color: #0f172a;
+        border: none;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(251,191,36,0.35);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .ai-banner-upgrade-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 30px rgba(251,191,36,0.45);
+      }
+
+      .ai-banner-upgrade-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 8px 16px rgba(251,191,36,0.35);
+      }
+
+      @media (max-width: 640px) {
+        .ai-free-banner {
+          grid-template-columns: 1fr;
+          text-align: center;
+          row-gap: 8px;
+        }
+
+        .ai-banner-upgrade-btn {
+          width: 100%;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
   }
 
   // Detect user's membership plan from Memberstack
@@ -47,6 +132,32 @@ const MembershipController = (() => {
   // Check if user is free
   function isFree() {
     return userPlan === 'free' || !userPlan;
+  }
+
+  function renderFreePlanBanner() {
+    if (!isFree()) {
+      document.getElementById(FREE_BANNER_ID)?.remove();
+      document.body.classList.remove('ai-has-free-banner');
+      return;
+    }
+
+    if (document.getElementById(FREE_BANNER_ID)) return;
+
+    const banner = document.createElement('div');
+    banner.id = FREE_BANNER_ID;
+    banner.className = 'ai-free-banner';
+    banner.innerHTML = `
+      <div class="ai-free-banner__label">Free Plan</div>
+      <div class="ai-free-banner__text">You're on the Free plan. Upgrade to Pro to unlock all matched schools and full details.</div>
+      <button class="ai-banner-upgrade-btn" id="ai-banner-upgrade">Upgrade to Pro</button>
+    `;
+
+    document.body.classList.add('ai-has-free-banner');
+    document.body.appendChild(banner);
+
+    document.getElementById('ai-banner-upgrade')?.addEventListener('click', () => {
+      showUpgradeModal('all matched schools and full details');
+    });
   }
 
   // Get number of visible schools for this user
@@ -387,6 +498,7 @@ const MembershipController = (() => {
     canViewFullDetails,
     showDetailTeaser,
     showUpgradeModal,
+    renderFreePlanBanner,
     initDetailTeaser,
     initPaywallClicks
   };
