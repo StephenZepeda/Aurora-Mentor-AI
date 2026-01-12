@@ -70,19 +70,21 @@
 }
 
 .ai-card {
-  background: var(--main-card-color);
-  border: none;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+  background: linear-gradient(135deg, #441E4B 0%, #5b21b6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .2), 0 0 0 1px rgba(255, 255, 255, .08) inset;
   color: var(--ink);
+  overflow: hidden;
 }
 
 .ai-card h2 {
   margin: 0;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(17, 24, 39, .12);
-  font-size: 20px;
-  font-weight: 700;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
 }
 
 .ai-body {
@@ -101,23 +103,31 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 8px 14px;
   border-radius: 9999px;
-  background: var(--indigo-50);
-  color: var(--indigo-800);
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
   font-size: 12px;
-  opacity: .6;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .ai-step-dot.active {
   opacity: 1;
-  box-shadow: 0 0 0 3px var(--ring);
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.25), 0 4px 12px rgba(124, 58, 237, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .ai-step-dot.done {
-  opacity: .9;
-  background: var(--indigo-100);
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Layout */
@@ -158,25 +168,32 @@
 /* Inputs & textareas */
 .ai-input,
 .ai-textarea {
-  padding: 10px 12px;
-  border: 2px solid var(--accent-card-color);
-  border-radius: 10px;
+  padding: 12px 14px;
+  border: 2px solid rgba(167, 139, 250, 0.3);
+  border-radius: 12px;
   font-size: 14px;
-  background: var(--main-card-text-color);
+  background: rgba(255, 255, 255, 0.95);
   color: var(--pill-text);
-  transition: border-color .2s, box-shadow .2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .ai-input::placeholder,
 .ai-textarea::placeholder {
-  color: var(--indigo-400);
+  color: rgba(124, 58, 237, 0.5);
 }
 
 .ai-input:focus,
 .ai-textarea:focus {
-  border-color: var(--violet-700);
-  box-shadow: 0 0 0 3px var(--ring);
+  border-color: var(--purple-500);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2), 0 4px 12px rgba(124, 58, 237, 0.15);
   outline: none;
+}
+
+.ai-input:hover,
+.ai-textarea:hover {
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 2px 8px rgba(91, 33, 182, 0.1);
 }
 
 .ai-textarea {
@@ -185,25 +202,27 @@
 
 /* Native select */
 .ai-select {
-  padding: 10px 12px;
-  border: 2px solid var(--accent-card-color);
-  border-radius: 10px;
+  padding: 12px 14px;
+  border: 2px solid rgba(167, 139, 250, 0.3);
+  border-radius: 12px;
   font-size: 14px;
-  background: var(--indigo-50);
+  background: rgba(255, 255, 255, 0.95);
   color: var(--pill-text);
-  transition: border-color .2s, box-shadow .2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .ai-select:focus {
-  border-color: var(--violet-700);
-  box-shadow: 0 0 0 3px var(--ring);
+  border-color: var(--purple-500);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2), 0 4px 12px rgba(124, 58, 237, 0.15);
   outline: none;
 }
 
 .ai-input:hover,
 .ai-textarea:hover,
 .ai-select:hover {
-  border-color: var(--purple-500);
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 2px 8px rgba(91, 33, 182, 0.1);
 }
 
 /* Actions */
@@ -216,11 +235,12 @@
 
 .ai-btn {
   border: 0;
-  border-radius: 9999px;
-  padding: 10px 18px;
-  font-weight: 700;
+  border-radius: 12px;
+  padding: 11px 22px;
+  font-weight: 800;
   cursor: pointer;
-  transition: transform .05s ease, box-shadow .2s, background .2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
 }
 
 .ai-btn:active {
@@ -228,28 +248,35 @@
 }
 
 .ai-secondary {
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
 }
 
 .ai-secondary:hover {
-  background: var(--gray-200);
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .ai-primary {
-  background: var(--main-card-color);
-  color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #1e293b;
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  font-weight: 800;
 }
 
 .ai-primary:hover:enabled {
-  background: #5458ea;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, .28);
+  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+  transform: translateY(-2px);
 }
 
 .ai-primary:disabled {
-  background: var(--indigo-200);
-  color: var(--gray-700);
+  background: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.5);
   cursor: not-allowed;
   box-shadow: none;
 }
