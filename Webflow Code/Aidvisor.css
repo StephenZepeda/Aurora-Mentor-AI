@@ -349,17 +349,41 @@
 }
 
 .ai-card-result {
-  border-radius: 12px;
-  padding: 16px;
-  background: var(--main-card-color);
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, #441E4B 0%, #5b21b6 100%);
   color: var(--ink);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .2), 0 0 0 1px rgba(255, 255, 255, .08) inset;
   cursor: pointer;
   position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.ai-card-result::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.6), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ai-card-result:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(91, 33, 182, .4), 0 0 0 1px rgba(255, 255, 255, .15) inset;
+}
+
+.ai-card-result:hover::before {
+  opacity: 1;
 }
 
 .ai-card-result:active {
-  transform: translateY(1px);
+  transform: translateY(-2px);
+  transition: transform 0.1s ease;
 }
 
 /* Blur cards after the first 3 and fake cards */
@@ -427,36 +451,60 @@
 }
 
 .ai-card-result h3 {
-  margin: 0 0 8px;
-  font-size: 18px;
+  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 700;
   color: #fff;
+  line-height: 1.3;
+  letter-spacing: -0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.ai-card-result .ai-card-content > div {
+  margin-bottom: 10px;
+}
+
+.ai-card-result .ai-card-content > p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .ai-pill {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 9999px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--pill-text);
   background: var(--pill-bg);
   margin-right: 6px;
   margin-bottom: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.ai-card-result:hover .ai-pill {
+  transform: translateY(-1px);
 }
 
 .ai-pill.safety {
-  background: var(--pill-safety-bg);
+  background: linear-gradient(135deg, #bbf7d0, #86efac);
   color: var(--pill-safety-text);
+  box-shadow: 0 2px 8px rgba(187, 247, 208, 0.4);
 }
 
 .ai-pill.match {
-  background: var(--pill-match-bg);
+  background: linear-gradient(135deg, #fed7aa, #fdba74);
   color: var(--pill-match-text);
+  box-shadow: 0 2px 8px rgba(254, 215, 170, 0.4);
 }
 
 .ai-pill.reach {
-  background: var(--pill-reach-bg);
+  background: linear-gradient(135deg, #fecaca, #fca5a5);
   color: var(--pill-reach-text);
+  box-shadow: 0 2px 8px rgba(254, 202, 202, 0.4);
 }
 
 /* Spinner */
