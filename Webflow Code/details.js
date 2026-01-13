@@ -31,6 +31,15 @@ const DetailsController = (() => {
   function toggleSchoolDetail(card, schoolName) {
     const container = card.closest("#ai-schools") || document;
 
+    const isBlurred = card.dataset?.isBlurred === "true";
+    const isFreeUser = typeof MembershipController !== 'undefined' && MembershipController.isFree();
+    if (isBlurred && isFreeUser) {
+      if (typeof MembershipController?.showUpgradeModal === 'function') {
+        MembershipController.showUpgradeModal('see full school names and details');
+      }
+      return;
+    }
+
     let next = card.nextElementSibling;
     if (next && next.classList.contains("ai-school-detail-panel")) {
       next.remove();
@@ -54,10 +63,7 @@ const DetailsController = (() => {
   function openSchoolDetailInline(panel, schoolName) {
     if (!panel?.isConnected) return;
 
-    // Check if user can view full details
     const isFreeUser = typeof MembershipController !== 'undefined' && MembershipController.isFree();
-    
-    // Show teaser for free users
     if (isFreeUser) {
       panel.innerHTML = `
         <div class="ai-card">

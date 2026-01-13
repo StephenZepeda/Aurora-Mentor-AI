@@ -5,7 +5,9 @@
 
 const MembershipController = (() => {
   // Memberstack integration
-  const MAX_FREE_SCHOOLS = 3; // Preview schools for free users
+  const MAX_FREE_PREVIEW_SCHOOLS = 3; // Fully visible schools for free users
+  const MAX_FREE_BLURRED_SCHOOLS = 7; // Additional blurred previews for free users
+  const MAX_FREE_SCHOOLS = MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS;
   const MAX_PRO_SCHOOLS = 30; // Full list for pro users
   const MAX_FREE_RERUNS = 1; // Free users get one re-run
   const FREE_BANNER_ID = 'ai-free-plan-banner';
@@ -290,7 +292,7 @@ const MembershipController = (() => {
     banner.className = 'ai-free-banner';
     banner.innerHTML = `
       <div class="ai-free-banner__label">Free Plan</div>
-      <div class="ai-free-banner__text">You're on the Free plan with 3 preview schools. Upgrade to Pro to unlock all matched schools and full details.</div>
+      <div class="ai-free-banner__text">You're on the Free plan with 3 named schools plus 7 blurred previews. Upgrade to Pro to unlock every match and full details.</div>
       <button class="ai-banner-upgrade-btn" id="ai-banner-upgrade">Upgrade to Pro</button>
     `;
 
@@ -356,12 +358,23 @@ const MembershipController = (() => {
       return schools; // Pro users see all schools with full details
     }
     
-    // Free users: only show preview (3-5 schools)
-    return schools.slice(0, MAX_FREE_SCHOOLS).map((school) => ({
+    const visible = schools.slice(0, MAX_FREE_PREVIEW_SCHOOLS).map((school) => ({
       ...school,
       isPreview: true,
-      hiddenDetails: true // Hide reach/target/safety, acceptance %, financial fit
+      hiddenDetails: true,
+      isBlurred: false
     }));
+
+    const blurred = schools
+      .slice(MAX_FREE_PREVIEW_SCHOOLS, MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS)
+      .map((school) => ({
+        ...school,
+        isPreview: false,
+        hiddenDetails: true,
+        isBlurred: true
+      }));
+
+    return [...visible, ...blurred];
   }
 
   // Show upgrade prompt modal
@@ -512,15 +525,35 @@ const MembershipController = (() => {
         /* Blurred school card styling */
         .ai-card-result.ai-blurred {
           position: relative;
-          opacity: 0.6;
+          opacity: 1;
+        }
+
+        .ai-blurred-name {
+          position: relative;
+          filter: blur(7px);
+          color: #475569;
+          user-select: none;
+        }
+
+        .ai-blurred-name::after {
+          content: 'Hidden - upgrade to reveal';
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #0f172a;
+          font-weight: 800;
+          letter-spacing: 0.2px;
+          filter: none;
         }
         
         .ai-card-result.ai-blurred::after {
           content: '';
           position: absolute;
           top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(255,255,255,0.3);
-          backdrop-filter: blur(3px);
+          background: rgba(255,255,255,0.18);
+          backdrop-filter: none;
           border-radius: 8px;
           pointer-events: none;
         }
@@ -578,8 +611,8 @@ const MembershipController = (() => {
       <div class="ai-upgrade-prompt-card">
         <div class="ai-upgrade-prompt-icon">🔒</div>
         <div class="ai-upgrade-prompt-content">
-          <h3>Unlock 7+ More Schools</h3>
-          <p>You're seeing 3 preview schools. Upgrade to Pro to see your full personalized list.</p>
+          <h3>Reveal Every School</h3>
+          <p>You're seeing 3 named schools plus 7 blurred previews. Upgrade to Pro to unlock the names and ${remainingCount > 0 ? `${remainingCount} more matches` : 'your full personalized list'}.</p>
           <ul class="ai-upgrade-features">
             <li>Full school list (15-30 matches)</li>
             <li>Reach / Target / Safety labels</li>
@@ -604,10 +637,11 @@ const MembershipController = (() => {
     const blurClass = isBlurred ? 'ai-blurred' : '';
     const cat = (school.category || "").toLowerCase();
     const cls = cat === 'safety' ? 'safety' : cat === 'match' ? 'match' : cat === 'reach' ? 'reach' : '';
+    const nameClass = isBlurred ? 'ai-blurred-name' : '';
     
-    let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred}" data-is-fake="${school.isFake ? 'true' : 'false'}" data-is-preview="${isPreview ? 'true' : 'false'}">
+    let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred ? 'true' : 'false'}" data-is-fake="${school.isFake ? 'true' : 'false'}" data-is-preview="${isPreview ? 'true' : 'false'}">
       <div class="ai-card-content">
-        <h3>${escapeHtml(school.name || "")}</h3>
+        <h3 class="${nameClass}">${escapeHtml(school.name || "")}</h3>
         <div>`;
     
     // Free users: hide reach/target/safety and acceptance %
@@ -673,7 +707,8 @@ const MembershipController = (() => {
   function initPaywallClicks() {
     document.addEventListener('click', (e) => {
       if (e.target.closest('.ai-paywall-overlay')) {
-        window.location.href = '/plans';
+        e.preventDefault();
+        showUpgradeModal('see full school names and details');
       }
     });
   }
