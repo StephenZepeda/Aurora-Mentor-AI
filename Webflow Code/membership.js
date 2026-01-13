@@ -18,6 +18,15 @@ const MembershipController = (() => {
   let memberEmail = null;
   let rerunCount = 0;
 
+  function maskSchoolName(name = "") {
+    const clean = String(name || "").trim();
+    if (!clean) return "Hidden Match";
+    const head = clean.slice(0, Math.min(3, clean.length));
+    const tail = clean.length > 6 ? clean.slice(-1) : "";
+    const dots = clean.length > 3 ? "..." : "";
+    return `${head}${dots}${tail}`;
+  }
+
   // Initialize Memberstack integration
   function init() {
     ensureBaseStyles();
@@ -366,13 +375,14 @@ const MembershipController = (() => {
       isFake: false
     }));
 
-    const blurredCount = Math.min(MAX_FREE_BLURRED_SCHOOLS, Math.max(0, schools.length - MAX_FREE_PREVIEW_SCHOOLS));
-    const blurred = Array.from({ length: blurredCount }).map((_, i) => ({
-      name: `Hidden Match ${i + 1}`,
+    const blurredSource = schools.slice(MAX_FREE_PREVIEW_SCHOOLS, MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS);
+    const blurred = blurredSource.map((school, i) => ({
+      ...school,
+      name: maskSchoolName(school.name || `Hidden Match ${i + 1}`),
       reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
       category: null,
       chance_percent: null,
-      distance_from_location: null,
+      distance_from_location: school.distance_from_location || 'Distance hidden',
       isPreview: false,
       hiddenDetails: true,
       isBlurred: true,
@@ -395,13 +405,14 @@ const MembershipController = (() => {
       isFake: false
     }));
 
-    const blurredCount = Math.min(MAX_FREE_BLURRED_SCHOOLS, Math.max(0, schools.length - MAX_FREE_PREVIEW_SCHOOLS));
-    const blurred = Array.from({ length: blurredCount }).map((_, i) => ({
-      name: `Hidden Match ${i + 1}`,
+    const blurredSource = schools.slice(MAX_FREE_PREVIEW_SCHOOLS, MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS);
+    const blurred = blurredSource.map((school, i) => ({
+      ...school,
+      name: maskSchoolName(school.name || `Hidden Match ${i + 1}`),
       reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
       category: null,
       chance_percent: null,
-      distance_from_location: null,
+      distance_from_location: school.distance_from_location || 'Distance hidden',
       isPreview: false,
       hiddenDetails: true,
       isBlurred: true,
@@ -695,7 +706,7 @@ const MembershipController = (() => {
     
     // Free users: hide reach/target/safety and acceptance %
     if (hiddenDetails && !isPro()) {
-      const distance = school.distance_from_location && !school.isFake ? school.distance_from_location : '';
+      const distance = school.distance_from_location || '';
       cardHTML += `${distance ? `<span class="ai-pill">${escapeHtml(distance)}</span>` : ""}`;
     } else {
       cardHTML += `
