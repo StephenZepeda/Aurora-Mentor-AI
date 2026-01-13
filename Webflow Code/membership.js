@@ -413,6 +413,9 @@ const MembershipController = (() => {
 
   // Show upgrade prompt modal
   function showUpgradeModal(feature = 'detailed school information') {
+    // Remove any existing upgrade modals to avoid stacking multiple layers
+    document.querySelectorAll('.ai-upgrade-modal').forEach(m => m.remove());
+
     const modal = document.createElement('div');
     modal.className = 'ai-upgrade-modal';
     modal.innerHTML = `
@@ -624,7 +627,16 @@ const MembershipController = (() => {
     document.body.appendChild(modal);
 
     // Local helpers
-    const closeModal = () => modal.remove();
+    const closeModal = () => {
+      document.removeEventListener('keydown', onKeyDown);
+      modal.remove();
+    };
+
+    // Esc key closes modal
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    document.addEventListener('keydown', onKeyDown);
 
     // Event handlers (local)
     modal.addEventListener('click', (e) => {
@@ -640,15 +652,6 @@ const MembershipController = (() => {
         window.location.href = '/plans';
       }
     });
-
-    // Esc key closes modal
-    const onKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        closeModal();
-        document.removeEventListener('keydown', onKeyDown);
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
   }
 
   // Generate upgrade prompt card for remaining schools
