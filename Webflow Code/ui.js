@@ -170,8 +170,15 @@ const UIController = (() => {
       window.__merge_with_previous_on_next_render__ = false;
     }
 
-    window.__ai_raw_schools__ = Array.isArray(baseList) ? baseList.slice() : [];
-    drawSchools(window.__ai_raw_schools__);
+    const isFree = (typeof MembershipController !== 'undefined') && MembershipController.isFree();
+    const storageList = Array.isArray(baseList)
+      ? (isFree && typeof MembershipController.sanitizeForStorage === 'function'
+          ? MembershipController.sanitizeForStorage(baseList)
+          : baseList.slice())
+      : [];
+
+    window.__ai_raw_schools__ = storageList;
+    drawSchools(baseList);
 
     el("ai-results")?.classList.remove("ai-hidden");
     el("ai-errors")?.classList.add("ai-hidden");

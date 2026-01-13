@@ -362,17 +362,51 @@ const MembershipController = (() => {
       ...school,
       isPreview: true,
       hiddenDetails: true,
-      isBlurred: false
+      isBlurred: false,
+      isFake: false
     }));
 
-    const blurred = schools
-      .slice(MAX_FREE_PREVIEW_SCHOOLS, MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS)
-      .map((school) => ({
-        ...school,
-        isPreview: false,
-        hiddenDetails: true,
-        isBlurred: true
-      }));
+    const blurredCount = Math.min(MAX_FREE_BLURRED_SCHOOLS, Math.max(0, schools.length - MAX_FREE_PREVIEW_SCHOOLS));
+    const blurred = Array.from({ length: blurredCount }).map((_, i) => ({
+      name: `Hidden Match ${i + 1}`,
+      reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
+      category: null,
+      chance_percent: null,
+      distance_from_location: null,
+      isPreview: false,
+      hiddenDetails: true,
+      isBlurred: true,
+      isFake: true
+    }));
+
+    return [...visible, ...blurred];
+  }
+
+  // Redact data stored in globals for free users to prevent data leaks via inspect
+  function redactSchools(schools) {
+    if (!Array.isArray(schools)) return [];
+    if (isPro()) return schools.slice();
+
+    const visible = schools.slice(0, MAX_FREE_PREVIEW_SCHOOLS).map((school) => ({
+      ...school,
+      isPreview: true,
+      hiddenDetails: true,
+      isBlurred: false,
+      isFake: false
+    }));
+
+    const blurredCount = Math.min(MAX_FREE_BLURRED_SCHOOLS, Math.max(0, schools.length - MAX_FREE_PREVIEW_SCHOOLS));
+    const blurred = Array.from({ length: blurredCount }).map((_, i) => ({
+      name: `Hidden Match ${i + 1}`,
+      reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
+      category: null,
+      chance_percent: null,
+      distance_from_location: null,
+      isPreview: false,
+      hiddenDetails: true,
+      isBlurred: true,
+      isFake: true
+    }));
 
     return [...visible, ...blurred];
   }
@@ -646,7 +680,8 @@ const MembershipController = (() => {
     
     // Free users: hide reach/target/safety and acceptance %
     if (hiddenDetails && !isPro()) {
-      cardHTML += `${school.distance_from_location ? `<span class="ai-pill">${escapeHtml(school.distance_from_location)}</span>` : ""}`;
+      const distance = school.distance_from_location && !school.isFake ? school.distance_from_location : '';
+      cardHTML += `${distance ? `<span class="ai-pill">${escapeHtml(distance)}</span>` : ""}`;
     } else {
       cardHTML += `
           ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
@@ -713,6 +748,11 @@ const MembershipController = (() => {
     });
   }
 
+  // Return sanitized data for global storage to avoid leaking locked names
+  function sanitizeForStorage(schools) {
+    return redactSchools(schools);
+  }
+
   // Public API
   return {
     init,
@@ -729,6 +769,7 @@ const MembershipController = (() => {
     renderFreePlanBanner,
     initDetailTeaser,
     initPaywallClicks,
+    sanitizeForStorage,
     // Re-run tracking
     canRerun,
     incrementRerunCount,
