@@ -416,9 +416,9 @@ const MembershipController = (() => {
     const modal = document.createElement('div');
     modal.className = 'ai-upgrade-modal';
     modal.innerHTML = `
-      <div class="ai-upgrade-overlay" id="ai-upgrade-overlay"></div>
+      <div class="ai-upgrade-overlay" data-upgrade-close="1"></div>
       <div class="ai-upgrade-dialog">
-        <button class="ai-upgrade-close" id="ai-upgrade-close">&times;</button>
+        <button class="ai-upgrade-close" data-upgrade-close="1">&times;</button>
         <h2>Unlock Full Features</h2>
         <p>Upgrade to <strong>Pro</strong> to access ${feature}.</p>
         <div class="ai-upgrade-benefits">
@@ -429,8 +429,8 @@ const MembershipController = (() => {
             <li>✓ Application strategy coaching</li>
           </ul>
         </div>
-        <button class="ai-btn ai-primary" id="ai-upgrade-btn">Upgrade to Pro</button>
-        <button class="ai-btn ai-secondary" id="ai-upgrade-dismiss">Continue as Free User</button>
+        <button class="ai-btn ai-primary" data-upgrade-action="upgrade">Upgrade to Pro</button>
+        <button class="ai-btn ai-secondary" data-upgrade-close="1">Continue as Free User</button>
       </div>
     `;
 
@@ -623,20 +623,32 @@ const MembershipController = (() => {
 
     document.body.appendChild(modal);
 
-    // Event handlers
-    document.getElementById('ai-upgrade-close')?.addEventListener('click', () => modal.remove());
-    document.getElementById('ai-upgrade-overlay')?.addEventListener('click', () => modal.remove());
-    document.getElementById('ai-upgrade-dismiss')?.addEventListener('click', () => modal.remove());
-    
+    // Local helpers
+    const closeModal = () => modal.remove();
+
+    // Event handlers (local)
+    modal.addEventListener('click', (e) => {
+      const shouldClose = e.target?.dataset?.upgradeClose === '1';
+      if (shouldClose) closeModal();
+    });
+
     // Upgrade button - redirect to pricing/checkout
-    document.getElementById('ai-upgrade-btn')?.addEventListener('click', () => {
+    modal.querySelector('[data-upgrade-action="upgrade"]')?.addEventListener('click', () => {
       if (typeof window.MemberStack !== 'undefined' && window.MemberStack?.openCheckout) {
         window.MemberStack.openCheckout({ plan: 'pro' });
       } else {
-        // Fallback URL if Memberstack not available
         window.location.href = '/plans';
       }
     });
+
+    // Esc key closes modal
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+        document.removeEventListener('keydown', onKeyDown);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
   }
 
   // Generate upgrade prompt card for remaining schools
