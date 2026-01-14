@@ -7,8 +7,16 @@ const WizardController = (() => {
   let stepElements = []; // All step sections
   let dots = [];
   let prevBtn, submitBtn;
+  let initialized = false; // Flag to ensure init only runs once
 
   function init() {
+    // Prevent duplicate initialization
+    if (initialized) {
+      console.log('WizardController already initialized, skipping');
+      return;
+    }
+    initialized = true;
+
     // Query all step sections by looking for elements with data-step attribute
     stepElements = Array.from(document.querySelectorAll('[data-step]')).filter(el => {
       // Only include section elements or div elements that are direct steps (not dots)
