@@ -281,10 +281,16 @@ function initRefineUI() {
   if (refine) refine.style.display = "none";
 }
 
-// Hide school amount field for free users
+// Hide school amount field for free users and auto-fill with default
 function initSchoolAmountVisibility() {
   const field = document.getElementById("school-amount-field");
+  const input = document.getElementById("school_amount");
   if (field && typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
+    // Auto-fill with a default value for free users
+    if (input && !input.value) {
+      input.value = "3"; // Default to 3 schools for free users
+    }
+    // Hide the field since it's auto-filled
     field.style.display = "none";
   }
 }
