@@ -9,10 +9,20 @@ const WizardController = (() => {
   let prevBtn, submitBtn;
 
   function init() {
-    stepElements = Array.from(document.querySelectorAll('section.ai-step'));
+    // Query all step sections by looking for elements with data-step attribute
+    stepElements = Array.from(document.querySelectorAll('[data-step]')).filter(el => {
+      // Only include section elements or div elements that are direct steps (not dots)
+      return (el.tagName === 'SECTION' || el.className.includes('ai-step')) && 
+             el.className.includes('ai-step') &&
+             !el.className.includes('ai-step-dot');
+    });
+    
     dots = Array.from(document.querySelectorAll('.ai-step-dot'));
     prevBtn = document.getElementById('prev-btn');
     submitBtn = document.getElementById('submit-btn');
+
+    // Log for debugging
+    console.log('Wizard init: found', stepElements.length, 'steps and', dots.length, 'dots');
 
     // Wire up navigation
     prevBtn?.addEventListener('click', (e) => {
@@ -27,10 +37,12 @@ const WizardController = (() => {
       }
       // If type='submit', let it bubble to form handler
     });
-    dots.forEach((d, i) => {
+    dots.forEach((d) => {
       d.addEventListener('click', () => {
         const stepNum = Number(d.getAttribute('data-step'));
-        navigateToStep(Number.isFinite(stepNum) ? stepNum : i);
+        if (Number.isFinite(stepNum)) {
+          navigateToStep(stepNum);
+        }
       });
     });
 
@@ -46,28 +58,46 @@ const WizardController = (() => {
   }
 
   function navigateToStep(targetStepNumber) {
-    // Find the max step number available
-    const maxStepNumber = Math.max(...stepElements.map(s => Number(s.getAttribute('data-step')) ?? -1));
-    // Clamp to valid range
-    const newStepNumber = Math.max(0, Math.min(maxStepNumber, targetStepNumber));
-    showStep(newStepNumber);
+    console.log('Navigate to step:', targetStepNumber, 'current:', currentStepNumber);
+    showStep(targetStepNumber);
   }
 
   function showStep(stepNumber) {
+    // Validate the step number
+    if (!Number.isFinite(stepNumber)) {
+      console.warn('Invalid step number:', stepNumber);
+      return;
+    }
+
     currentStepNumber = stepNumber;
+    console.log('Showing step:', stepNumber);
     
     // Show/hide sections based on their data-step attribute
+    let found = false;
     stepElements.forEach((s) => {
       const sectionStepNum = Number(s.getAttribute('data-step'));
-      s.classList.toggle('ai-hidden', sectionStepNum !== stepNumber);
+      const isTarget = sectionStepNum === stepNumber;
+      if (isTarget) found = true;
+      
+      if (isTarget) {
+        s.classList.remove('ai-hidden');
+      } else {
+        s.classList.add('ai-hidden');
+      }
     });
+    
+    if (!found) {
+      console.warn('Step', stepNumber, 'not found in step elements');
+    }
     
     // Update button states
     if (prevBtn) prevBtn.disabled = (stepNumber === 0);
     if (submitBtn) {
-      const maxStepNumber = Math.max(...stepElements.map(s => Number(s.getAttribute('data-step')) ?? -1));
-      submitBtn.textContent = (stepNumber === maxStepNumber) ? 'Get My Matches' : 'Next';
-      submitBtn.type = (stepNumber === maxStepNumber) ? 'submit' : 'button';
+      const stepNumbers = stepElements.map(s => Number(s.getAttribute('data-step'))).filter(Number.isFinite);
+      const maxStepNumber = Math.max(...stepNumbers, 0);
+      const isLastStep = stepNumber === maxStepNumber;
+      submitBtn.textContent = isLastStep ? 'Get My Matches' : 'Next';
+      submitBtn.type = isLastStep ? 'submit' : 'button';
     }
     syncDots();
     document.querySelector('.ai-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
