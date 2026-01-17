@@ -380,7 +380,8 @@ const MembershipController = (() => {
       ...school,
       name: maskSchoolName(school.name || `Hidden Match ${i + 1}`),
       reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
-      category: null,
+      // Keep category (Reach/Target/Safety) visible for free users
+      // Hide acceptance percentage
       chance_percent: null,
       distance_from_location: school.distance_from_location || 'Distance hidden',
       isPreview: false,
@@ -410,7 +411,7 @@ const MembershipController = (() => {
       ...school,
       name: maskSchoolName(school.name || `Hidden Match ${i + 1}`),
       reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
-      category: null,
+      // Keep category visible; hide acceptance percentage
       chance_percent: null,
       distance_from_location: school.distance_from_location || 'Distance hidden',
       isPreview: false,
@@ -704,10 +705,12 @@ const MembershipController = (() => {
         <h3 class="${nameClass}">${escapeHtml(school.name || "")}</h3>
         <div>`;
     
-    // Free users: hide reach/target/safety and acceptance %
+    // Free users: show Reach/Target/Safety and distance; still hide acceptance %
     if (hiddenDetails && !isPro()) {
       const distance = school.distance_from_location || '';
-      cardHTML += `${distance ? `<span class="ai-pill">${escapeHtml(distance)}</span>` : ""}`;
+      cardHTML += `
+          ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
+          ${distance ? `<span class="ai-pill">${escapeHtml(distance)}</span>` : ""}`;
     } else {
       cardHTML += `
           ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
