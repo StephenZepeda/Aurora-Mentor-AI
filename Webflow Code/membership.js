@@ -703,19 +703,19 @@ const MembershipController = (() => {
     let cardHTML = `<div class="ai-card-result ${blurClass}" data-school-index="${index}" data-is-blurred="${isBlurred ? 'true' : 'false'}" data-is-fake="${school.isFake ? 'true' : 'false'}" data-is-preview="${isPreview ? 'true' : 'false'}">
       <div class="ai-card-content">
         <h3 class="${nameClass}">${escapeHtml(school.name || "")}</h3>
-        <div>`;
+        <div class="ai-pill-row">`;
     
     // Free users: show Reach/Target/Safety and distance; still hide acceptance %
     if (hiddenDetails && !isPro()) {
       const distance = school.distance_from_location || '';
       cardHTML += `
-          ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
-          ${distance ? `<span class="ai-pill">${escapeHtml(distance)}</span>` : ""}`;
+            ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
+            ${distance ? `<span class="ai-pill ai-pill-distance">${escapeHtml(distance)}</span>` : ""}`;
     } else {
       cardHTML += `
-          ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
-          ${school.chance_percent != null ? `<span class="ai-pill">${school.chance_percent}% chance</span>` : ""}
-          ${school.distance_from_location ? `<span class="ai-pill">${escapeHtml(school.distance_from_location)}</span>` : ""}`;
+            ${school.category ? `<span class="ai-pill ${cls}">${escapeHtml(school.category)}</span>` : ""}
+            ${school.distance_from_location ? `<span class="ai-pill ai-pill-distance">${escapeHtml(school.distance_from_location)}</span>` : ""}
+            ${school.chance_percent != null ? `<span class="ai-pill ai-pill-chance">${school.chance_percent}% chance</span>` : ""}`;
     }
     
     cardHTML += `

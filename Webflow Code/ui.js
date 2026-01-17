@@ -119,16 +119,16 @@ const UIController = (() => {
         return MembershipController.renderSchoolCard(s, index);
       }
       
-      // Fallback to original rendering
+      // Fallback to original rendering with consistent pill row placement
       const cat = (s.category || "").toLowerCase();
       const cls = cat === 'safety' ? 'safety' : cat === 'match' ? 'match' : cat === 'reach' ? 'reach' : '';
       return `<div class="ai-card-result">
         <div class="ai-card-content">
           <h3>${s.name || ""}</h3>
-          <div>
+          <div class="ai-pill-row">
             ${s.category ? `<span class="ai-pill ${cls}">${s.category}</span>` : ""}
-            ${s.chance_percent != null ? `<span class="ai-pill">${s.chance_percent}% chance</span>` : ""}
-            ${s.distance_from_location ? `<span class="ai-pill">${s.distance_from_location}</span>` : ""}
+            ${s.distance_from_location ? `<span class="ai-pill ai-pill-distance">${s.distance_from_location}</span>` : ""}
+            ${s.chance_percent != null ? `<span class="ai-pill ai-pill-chance">${s.chance_percent}% chance</span>` : ""}
           </div>
           <p>${s.reasoning || ""}</p>
         </div>
