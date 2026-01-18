@@ -19,6 +19,16 @@ const MembershipController = (() => {
   let memberEmail = null;
   let rerunCount = 0;
 
+  // Normalize any input into a short, consistent hash string
+  function normalizeHashValue(input) {
+    const str = String(input || "");
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+    }
+    return `h${(hash >>> 0).toString(16)}`;
+  }
+
   function maskSchoolName(name = "") {
     const clean = String(name || "").trim();
     if (!clean) return "Hidden Match";
@@ -41,7 +51,11 @@ const MembershipController = (() => {
     try {
       const raw = localStorage.getItem(PAYLOAD_HASH_KEY);
       const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr.slice(0, 10) : [];
+      const normalized = Array.isArray(arr)
+        ? Array.from(new Set(arr.map(h => normalizeHashValue(h)))).filter(Boolean).slice(0, 10)
+        : [];
+      console.log('[Membership] load hashes', normalized);
+      return normalized;
     } catch (e) {
       return [];
     }
@@ -49,7 +63,11 @@ const MembershipController = (() => {
 
   function savePayloadHashes(arr) {
     try {
-      localStorage.setItem(PAYLOAD_HASH_KEY, JSON.stringify(arr || []));
+      const normalized = Array.isArray(arr)
+        ? Array.from(new Set(arr.map(h => normalizeHashValue(h)))).filter(Boolean).slice(0, 10)
+        : [];
+      localStorage.setItem(PAYLOAD_HASH_KEY, JSON.stringify(normalized));
+      console.log('[Membership] save hashes', normalized);
     } catch (e) {
       /* ignore */
     }
@@ -350,6 +368,7 @@ const MembershipController = (() => {
     rerunCount++;
     try {
       localStorage.setItem(RERUN_COUNT_KEY, String(rerunCount));
+      console.log('[Membership] increment rerun to', rerunCount);
     } catch (e) {
       console.warn('[Membership] Could not save rerun count:', e);
     }
@@ -358,8 +377,10 @@ const MembershipController = (() => {
   // Checks if another run is allowed. If hash is provided and already used, it won't count against the limit.
   function canRerun(hash = null) {
     if (isPro()) return true;
+    const normalized = hash ? normalizeHashValue(hash) : null;
     const hashes = loadPayloadHashes();
-    if (hash && hashes.includes(hash)) return true; // repeating same payload doesn't consume allowance
+    console.log('[Membership] canRerun check', { hash: normalized, rerunCount, hashes, max: MAX_FREE_RERUNS });
+    if (normalized && hashes.includes(normalized)) return true; // repeating same payload doesn't consume allowance
     return rerunCount < MAX_FREE_RERUNS;
   }
 
@@ -367,17 +388,20 @@ const MembershipController = (() => {
   function recordPayloadRun(hash = null) {
     if (isPro()) return { consumed: false };
 
+    const normalized = hash ? normalizeHashValue(hash) : null;
     const hashes = loadPayloadHashes();
-    if (hash && hashes.includes(hash)) {
+    if (normalized && hashes.includes(normalized)) {
+      console.log('[Membership] payload already seen, not consuming', normalized);
       return { consumed: false };
     }
 
     incrementRerunCount();
-    if (hash) {
-      hashes.push(hash);
+    if (normalized) {
+      hashes.push(normalized);
       savePayloadHashes(hashes);
     }
 
+    console.log('[Membership] consumed run for new payload', normalized, 'rerunCount now', rerunCount);
     return { consumed: true };
   }
 

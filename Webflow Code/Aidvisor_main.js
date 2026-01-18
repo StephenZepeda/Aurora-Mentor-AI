@@ -85,7 +85,9 @@ function initFormSubmit() {
 
     // Free users: block only if this is a new payload and limit is hit
     if (typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
+      console.log('[AidVisor] submit payload hash', payloadHash, 'rerunCount?', MembershipController.getRemainingReruns?.());
       if (!MembershipController.canRerun(payloadHash)) {
+        console.warn('[AidVisor] blocking submit: free limit reached for new payload');
         MembershipController.showUpgradeModal('unlimited runs and refinements');
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -94,7 +96,8 @@ function initFormSubmit() {
         UIController.hideProcessing();
         return;
       }
-      MembershipController.recordPayloadRun(payloadHash);
+      const res = MembershipController.recordPayloadRun(payloadHash);
+      console.log('[AidVisor] recorded payload run', res);
     }
     
     // For free users, limit to preview schools (backend will handle full list)
@@ -150,7 +153,9 @@ function initRefineButton() {
 
     // Check re-run limit for free users based on unique payloads
     if (typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
+      console.log('[AidVisor] refine payload hash', payloadHash, 'remaining?', MembershipController.getRemainingReruns?.());
       if (!MembershipController.canRerun(payloadHash)) {
+        console.warn('[AidVisor] blocking refine: free limit reached for new payload');
         MembershipController.showUpgradeModal('unlimited re-runs and refinements');
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -159,7 +164,8 @@ function initRefineButton() {
         UIController.hideProcessing();
         return;
       }
-      MembershipController.recordPayloadRun(payloadHash);
+      const res = MembershipController.recordPayloadRun(payloadHash);
+      console.log('[AidVisor] recorded refine payload run', res);
     }
 
     await APIController.submitForm(
