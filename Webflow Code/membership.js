@@ -284,7 +284,8 @@ const MembershipController = (() => {
 
   // Check if user is free
   function isFree() {
-    return userPlan === 'free' || !userPlan;
+    // Treat any non-pro plan (including unknown names like "free plan") as free
+    return !userPlan || userPlan !== 'pro';
   }
 
   function renderFreePlanBanner() {
@@ -367,6 +368,7 @@ const MembershipController = (() => {
       return schools; // Pro users see all schools with full details
     }
     
+    // Free users: 3 named schools
     const visible = schools.slice(0, MAX_FREE_PREVIEW_SCHOOLS).map((school) => ({
       ...school,
       isPreview: true,
@@ -375,22 +377,39 @@ const MembershipController = (() => {
       isFake: false
     }));
 
-    const blurredSource = schools.slice(MAX_FREE_PREVIEW_SCHOOLS, MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS);
-    const blurred = blurredSource.map((school, i) => ({
-      ...school,
-      name: maskSchoolName(school.name || `Hidden Match ${i + 1}`),
-      reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
-      // Keep category (Reach/Target/Safety) visible for free users
-      // Hide acceptance percentage
-      chance_percent: null,
-      distance_from_location: school.distance_from_location || 'Distance hidden',
-      isPreview: false,
-      hiddenDetails: true,
-      isBlurred: true,
-      isFake: true
-    }));
+    // Free users: Always show 7 blurred cards (use actual data if available, or create placeholder fakes)
+    const blurredFakes = [];
+    for (let i = 0; i < MAX_FREE_BLURRED_SCHOOLS; i++) {
+      const sourceSchool = schools[MAX_FREE_PREVIEW_SCHOOLS + i];
+      if (sourceSchool) {
+        blurredFakes.push({
+          ...sourceSchool,
+          name: maskSchoolName(sourceSchool.name || `Hidden Match ${i + 1}`),
+          reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
+          chance_percent: null,
+          distance_from_location: sourceSchool.distance_from_location || 'Distance hidden',
+          isPreview: false,
+          hiddenDetails: true,
+          isBlurred: true,
+          isFake: true
+        });
+      } else {
+        // Create placeholder fake card if we run out of real schools
+        blurredFakes.push({
+          name: `Hidden Match ${i + 1}`,
+          reasoning: 'Upgrade to reveal this personalized match and why we picked it for you.',
+          category: ['Safety', 'Match', 'Reach'][i % 3],
+          chance_percent: null,
+          distance_from_location: 'Distance hidden',
+          isPreview: false,
+          hiddenDetails: true,
+          isBlurred: true,
+          isFake: true
+        });
+      }
+    }
 
-    return [...visible, ...blurred];
+    return [...visible, ...blurredFakes];
   }
 
   // Redact data stored in globals for free users to prevent data leaks via inspect
