@@ -14,12 +14,16 @@ function stableStringify(value) {
 // Lightweight checksum so we store only hashes, not payloads
 function hashPayload(value) {
   const str = stableStringify(value) || '';
+  console.log('[AidVisor] hashPayload input:', JSON.stringify(value, null, 2));
+  console.log('[AidVisor] hashPayload stringified:', str.substring(0, 200));
   let hash = 5381;
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
   }
   // Return short hex string
-  return `h${(hash >>> 0).toString(16)}`;
+  const result = `h${(hash >>> 0).toString(16)}`;
+  console.log('[AidVisor] hashPayload result:', result);
+  return result;
 }
 
 // Outcomes field dynamic behavior
