@@ -51,6 +51,12 @@ function initFormSubmit() {
     e.preventDefault();
     if (submitBtn?.disabled) return;
 
+    // Free users: block after hitting total run limit (initial + reruns)
+    if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && !MembershipController.canRerun()) {
+      MembershipController.showUpgradeModal('unlimited runs and refinements');
+      return;
+    }
+
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Processing…";
@@ -61,6 +67,11 @@ function initFormSubmit() {
     UIController.clearInvalidHighlights();
 
     const payload = FormController.buildPayload();
+
+    // Count this run for free users toward the total free allowance
+    if (typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
+      MembershipController.incrementRerunCount();
+    }
     
     // For free users, limit to preview schools (backend will handle full list)
     // We don't restrict school_amount here - backend returns full list
@@ -165,7 +176,7 @@ function showRerunLimitNotice() {
   notice.className = 'ai-rerun-limit-notice';
   notice.innerHTML = `
     <strong>Re-run Limit Reached</strong><br>
-    You've used your free re-run. Upgrade to Pro for unlimited re-runs with different filters and inputs.
+    You've used your free runs. Upgrade to Pro for unlimited runs with different filters and inputs.
     <button class="ai-btn ai-primary" style="margin-top: 8px; padding: 8px 16px; font-size: 13px;" onclick="MembershipController.showUpgradeModal('unlimited re-runs')">Upgrade Now</button>
   `;
   

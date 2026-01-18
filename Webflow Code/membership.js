@@ -6,10 +6,10 @@
 const MembershipController = (() => {
   // Memberstack integration
   const MAX_FREE_PREVIEW_SCHOOLS = 3; // Fully visible schools for free users
-  const MAX_FREE_BLURRED_SCHOOLS = 7; // Additional blurred previews for free users
+  const MAX_FREE_BLURRED_SCHOOLS = 6; // Additional blurred previews for free users
   const MAX_FREE_SCHOOLS = MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS;
   const MAX_PRO_SCHOOLS = 30; // Full list for pro users
-  const MAX_FREE_RERUNS = 1; // Free users get one re-run
+  const MAX_FREE_RERUNS = 2; // Free users get two total runs (initial + 1 rerun)
   const FREE_BANNER_ID = 'ai-free-plan-banner';
   const BASE_STYLE_ID = 'ai-membership-base-styles';
   const RERUN_COUNT_KEY = 'ai_rerun_count';
@@ -302,7 +302,7 @@ const MembershipController = (() => {
     banner.className = 'ai-free-banner';
     banner.innerHTML = `
       <div class="ai-free-banner__label">Free Plan</div>
-      <div class="ai-free-banner__text">You're on the Free plan with 3 named schools plus 7 blurred previews. Upgrade to Pro to unlock every match and full details.</div>
+      <div class="ai-free-banner__text">You're on the Free plan with 3 named schools plus 6 blurred previews. Upgrade to Pro to unlock every match and full details.</div>
       <button class="ai-banner-upgrade-btn" id="ai-banner-upgrade">Upgrade to Pro</button>
     `;
 
@@ -377,7 +377,7 @@ const MembershipController = (() => {
       isFake: false
     }));
 
-    // Free users: Always show 7 blurred cards (use actual data if available, or create placeholder fakes)
+    // Free users: Always show 6 blurred cards (use actual data if available, or create placeholder fakes)
     const blurredFakes = [];
     for (let i = 0; i < MAX_FREE_BLURRED_SCHOOLS; i++) {
       const sourceSchool = schools[MAX_FREE_PREVIEW_SCHOOLS + i];
@@ -692,7 +692,7 @@ const MembershipController = (() => {
         <div class="ai-upgrade-prompt-icon">🔒</div>
         <div class="ai-upgrade-prompt-content">
           <h3>Reveal Every School</h3>
-          <p>You're seeing 3 named schools plus 7 blurred previews. Upgrade to Pro to unlock the names and ${remainingCount > 0 ? `${remainingCount} more matches` : 'your full personalized list'}.</p>
+          <p>You're seeing 3 named schools plus 6 blurred previews. Upgrade to Pro to unlock the names and ${remainingCount > 0 ? `${remainingCount} more matches` : 'your full personalized list'}.</p>
           <ul class="ai-upgrade-features">
             <li>Full school list (15-30 matches)</li>
             <li>Reach / Target / Safety labels</li>
