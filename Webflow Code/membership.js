@@ -22,6 +22,11 @@ const MembershipController = (() => {
   // Normalize any input into a short, consistent hash string
   function normalizeHashValue(input) {
     const str = String(input || "");
+    // If already a hash (starts with 'h' and rest is hex), return as-is
+    if (/^h[0-9a-f]+$/.test(str)) {
+      return str;
+    }
+    // Otherwise compute hash
     let hash = 5381;
     for (let i = 0; i < str.length; i++) {
       hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
