@@ -2,6 +2,26 @@
    AIDVISOR.JS - Main application entry
    ======================================== */
 
+// Stable stringify to compare payloads irrespective of key order
+function stableStringify(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(v => stableStringify(v)).join(',')}]`;
+  const keys = Object.keys(value).sort();
+  const body = keys.map(k => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(',');
+  return `{${body}}`;
+}
+
+// Lightweight checksum so we store only hashes, not payloads
+function hashPayload(value) {
+  const str = stableStringify(value) || '';
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+  }
+  // Return short hex string
+  return `h${(hash >>> 0).toString(16)}`;
+}
+
 // Outcomes field dynamic behavior
 function initOutcomesField() {
   const outcomesMap = {
@@ -51,12 +71,6 @@ function initFormSubmit() {
     e.preventDefault();
     if (submitBtn?.disabled) return;
 
-    // Free users: block after hitting total run limit (initial + reruns)
-    if (typeof MembershipController !== 'undefined' && MembershipController.isFree() && !MembershipController.canRerun()) {
-      MembershipController.showUpgradeModal('unlimited runs and refinements');
-      return;
-    }
-
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Processing…";
@@ -67,10 +81,20 @@ function initFormSubmit() {
     UIController.clearInvalidHighlights();
 
     const payload = FormController.buildPayload();
+    const payloadHash = hashPayload(payload);
 
-    // Count this run for free users toward the total free allowance
+    // Free users: block only if this is a new payload and limit is hit
     if (typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
-      MembershipController.incrementRerunCount();
+      if (!MembershipController.canRerun(payloadHash)) {
+        MembershipController.showUpgradeModal('unlimited runs and refinements');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Get My Matches';
+        }
+        UIController.hideProcessing();
+        return;
+      }
+      MembershipController.recordPayloadRun(payloadHash);
     }
     
     // For free users, limit to preview schools (backend will handle full list)
@@ -110,12 +134,6 @@ function initRefineButton() {
   refineBtn?.addEventListener("click", async () => {
     if (submitBtn?.disabled) return;
 
-    // Check re-run limit for free users
-    if (typeof MembershipController !== 'undefined' && !MembershipController.canRerun()) {
-      MembershipController.showUpgradeModal('unlimited re-runs and refinements');
-      return;
-    }
-
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = "Processing…";
@@ -128,10 +146,20 @@ function initRefineButton() {
     window.__merge_with_previous_on_next_render__ = true;
 
     const payload = FormController.buildPayload();
-    
-    // Increment re-run count for free users
+    const payloadHash = hashPayload(payload);
+
+    // Check re-run limit for free users based on unique payloads
     if (typeof MembershipController !== 'undefined' && MembershipController.isFree()) {
-      MembershipController.incrementRerunCount();
+      if (!MembershipController.canRerun(payloadHash)) {
+        MembershipController.showUpgradeModal('unlimited re-runs and refinements');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Get My Matches';
+        }
+        UIController.hideProcessing();
+        return;
+      }
+      MembershipController.recordPayloadRun(payloadHash);
     }
 
     await APIController.submitForm(

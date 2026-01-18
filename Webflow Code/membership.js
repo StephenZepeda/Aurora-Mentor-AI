@@ -9,10 +9,11 @@ const MembershipController = (() => {
   const MAX_FREE_BLURRED_SCHOOLS = 6; // Additional blurred previews for free users
   const MAX_FREE_SCHOOLS = MAX_FREE_PREVIEW_SCHOOLS + MAX_FREE_BLURRED_SCHOOLS;
   const MAX_PRO_SCHOOLS = 30; // Full list for pro users
-  const MAX_FREE_RERUNS = 2; // Free users get two total runs (initial + 1 rerun)
+  const MAX_FREE_RERUNS = 2; // Free users get two unique payload runs
   const FREE_BANNER_ID = 'ai-free-plan-banner';
   const BASE_STYLE_ID = 'ai-membership-base-styles';
   const RERUN_COUNT_KEY = 'ai_rerun_count';
+  const PAYLOAD_HASH_KEY = 'ai_payload_hashes';
 
   let userPlan = null;
   let memberEmail = null;
@@ -34,6 +35,24 @@ const MembershipController = (() => {
     detectMembershipTier();
     loadRerunCount();
     renderFreePlanBanner();
+  }
+
+  function loadPayloadHashes() {
+    try {
+      const raw = localStorage.getItem(PAYLOAD_HASH_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.slice(0, 10) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function savePayloadHashes(arr) {
+    try {
+      localStorage.setItem(PAYLOAD_HASH_KEY, JSON.stringify(arr || []));
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   function ensureBaseStyles() {
@@ -336,9 +355,30 @@ const MembershipController = (() => {
     }
   }
 
-  function canRerun() {
+  // Checks if another run is allowed. If hash is provided and already used, it won't count against the limit.
+  function canRerun(hash = null) {
     if (isPro()) return true;
+    const hashes = loadPayloadHashes();
+    if (hash && hashes.includes(hash)) return true; // repeating same payload doesn't consume allowance
     return rerunCount < MAX_FREE_RERUNS;
+  }
+
+  // Records a run only if the payload hash is new for the user.
+  function recordPayloadRun(hash = null) {
+    if (isPro()) return { consumed: false };
+
+    const hashes = loadPayloadHashes();
+    if (hash && hashes.includes(hash)) {
+      return { consumed: false };
+    }
+
+    incrementRerunCount();
+    if (hash) {
+      hashes.push(hash);
+      savePayloadHashes(hashes);
+    }
+
+    return { consumed: true };
   }
 
   function getRemainingReruns() {
@@ -350,6 +390,7 @@ const MembershipController = (() => {
     rerunCount = 0;
     try {
       localStorage.removeItem(RERUN_COUNT_KEY);
+      localStorage.removeItem(PAYLOAD_HASH_KEY);
     } catch (e) {
       console.warn('[Membership] Could not reset rerun count:', e);
     }
@@ -818,6 +859,7 @@ const MembershipController = (() => {
     initDetailTeaser,
     initPaywallClicks,
     sanitizeForStorage,
+    recordPayloadRun,
     // Re-run tracking
     canRerun,
     incrementRerunCount,
